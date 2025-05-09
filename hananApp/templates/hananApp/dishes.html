@@ -37,10 +37,14 @@
         text-align: left;
     }
 
-    .edit-disabled {
+    .edit-btn {
         color: #007bff;
-        cursor: not-allowed;
+        cursor: pointer;
         text-decoration: none;
+    }
+
+    .edit-btn:hover {
+        text-decoration: underline;
     }
 
     /* Popup Styling */
@@ -124,10 +128,10 @@
         <tbody>
             {% for dish in dishes %}
             <tr>
-                <td><span class="edit-disabled">edit</span></td>
+                <td><a href="{% url 'edit_dish' dish.id %}" class="edit-btn">Edit</a></td>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ dish.name }}</td>
-                <td> {{dish.price}}</td>
+                <td>{{ dish.price }}</td>
                 <td>
                     <a href="#" 
                        class="see-more-link"
@@ -188,11 +192,5 @@
         document.getElementById('dish-popup').style.display = 'none';
     }
 </script>
+
 {% endblock %}
-
-
-
-
-
-
-

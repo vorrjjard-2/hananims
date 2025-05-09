@@ -371,10 +371,6 @@ def report(request):
     end_date = request.GET.get('end_date')
     report_items = request.GET.get('report_items', '').split(',')
 
-    # Convert to time-zone aware datetimes
-    start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'), timezone.get_current_timezone())
-    end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'), timezone.get_current_timezone())
-
     # Query the ingredients
     ingredients = Ingredient.objects.all()
 
@@ -394,10 +390,12 @@ def report(request):
     revenue_query = OrderDetails.objects.filter(order__in=orders).annotate(
         total_revenue=F('quantity') * F('dish__price')
     )
-    print(f"Revenue Query: {revenue_query.query}")  # This prints the SQL query
+    revenue = revenue_query.aggregate(total_revenue=Sum('total_revenue'))['total_revenue'] or 0
 
-    revenue = revenue_query.aggregate(total_revenue=Sum('total_revenue'))['total_revenue']
-    print(f"Calculated Revenue: {revenue}")  # Debugging: Show the revenue value
+    # Calculate Dishes Sold: Aggregate quantity sold for each dish
+    dish_sales = OrderDetails.objects.filter(order__in=orders).values('dish__name').annotate(
+        total_quantity=Sum('quantity')
+    ).order_by('dish__name')
 
     # Calculate Cost: Sum of the ingredient cost for each dish ordered
     total_cost = 0
@@ -419,6 +417,49 @@ def report(request):
         'revenue': revenue,
         'cost': total_cost,
         'profit': profit,
+        'dish_sales': dish_sales, 
     }
 
     return render(request, 'hananApp/report.html', context)
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Dish, RecipeDetails, Ingredient
+from django.http import JsonResponse
+
+def edit_dish(request, dish_id):
+    dish = get_object_or_404(Dish, id=dish_id)
+    ingredients = Ingredient.objects.all()
+
+    if request.method == 'POST':
+        # Get the dish name and price from the form
+        dish_name = request.POST.get('name')
+        dish_price = request.POST.get('price')
+
+        # Update the dish object
+        dish.name = dish_name
+        dish.price = dish_price
+        dish.save()
+
+        # Update ingredients
+        for i in range(1, len(request.POST) // 2 + 1):  # assuming every ingredient has a quantity
+            ingredient_id = request.POST.get(f'ingredient_{i}')
+            quantity = request.POST.get(f'quantity_{i}')
+
+            # Find or create a RecipeDetails entry
+            if ingredient_id and quantity:
+                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
+                recipe_detail = RecipeDetails.objects.filter(dish=dish, ingredient=ingredient).first()
+
+                if recipe_detail:
+                    # Update existing recipe detail
+                    recipe_detail.quantity_used = quantity
+                    recipe_detail.save()
+                else:
+                    # Add new recipe detail
+                    RecipeDetails.objects.create(dish=dish, ingredient=ingredient, quantity_used=quantity)
+
+        messages.success(request, "Dish updated successfully!")
+        return redirect('dishes')  # Redirect back to the dishes list
+
+    return render(request, 'hananApp/edit_dish.html', {'dish': dish, 'ingredients': ingredients})

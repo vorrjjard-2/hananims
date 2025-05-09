@@ -262,13 +262,27 @@ table td {
         </div>
     {% endif %}
     
-        {% if 'dish_sales' in report_items %}
-            <div class="tab active">
-                <h2>Dish Sales Performance</h2>
-                <!-- Your dish sales content goes here -->
-                <h1>blabla bla</h1>
-            </div>
-        {% endif %}
+    {% if 'dish_sales' in report_items %}
+    <div class="tab active">
+        <h2>Dish Sales</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dish Name</th>
+                    <th>Quantity Sold</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dish in dish_sales %}
+                    <tr>
+                        <td>{{ dish.dish__name }}</td>
+                        <td>{{ dish.total_quantity }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
     
         {% if 'inventory_usage' in report_items %}
             <div class="tab active">
