@@ -25,6 +25,7 @@ class Ingredient(models.Model):
 class Dish(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
+    price = models.FloatField()
 
 class RecipeDetails(models.Model):
     id = models.BigAutoField(primary_key=True)

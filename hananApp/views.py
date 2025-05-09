@@ -197,6 +197,7 @@ def add_order(request):
 def add_dish(request):
     if request.method == "POST":
         dish_name = request.POST.get("name")
+        dish_price = request.POST.get("price")  # Grab the dish price
         ingredient_ids = []
 
         # Collect all selected ingredient IDs
@@ -210,7 +211,7 @@ def add_dish(request):
             return redirect("add_dish")  # Replace with the actual redirect URL
 
         # Process form and save the dish
-        dish = Dish(name=dish_name)
+        dish = Dish(name=dish_name, price=dish_price)  # Save the price along with the name
         dish.save()
 
         # Save the ingredients associated with this dish
@@ -341,33 +342,83 @@ def update_inventory(request):
     context = {'ingredients': ingredients, 'now': timezone.now()}
     return render(request, 'hananApp/update_inventory.html', context)
 
-def generate_report(request):
+from django.urls import reverse
 
+def generate_report(request):
     report_items = []
 
     if request.method == "POST":
-
         start_date = "2024-11-17"
         end_date = "2024-11-24"
 
         start_date = request.POST.get('start_date', start_date)
         end_date = request.POST.get('end_date', end_date)
-        report_items = request.POST.getlist('report_items')  
-        
-        if 'current_inventory_level' in report_items:
-            pass
-        if 'low_stock_categorization' in report_items:
-            pass
-        if 'dish_sales_and_tally' in report_items:
-            pass
-        if 'financial_details' in report_items:
-            pass
-        if 'inventory_usage' in report_items:
-            pass
+        report_items = request.POST.getlist('report_items')  # Get selected report items
 
-    context =  {
+        # Redirect to the report view with the selected checkboxes and other data
+        report_url = reverse('report')  
+        report_url += f"?start_date={start_date}&end_date={end_date}&report_items={','.join(report_items)}"
+        
+        return redirect(report_url)
+    return render(request, 'hananApp/generate_report.html')
+
+from django.utils import timezone
+from datetime import datetime
+
+def report(request):
+    # Get the parameters from the URL
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    report_items = request.GET.get('report_items', '').split(',')
+
+    # Convert to time-zone aware datetimes
+    start_date = timezone.make_aware(datetime.strptime(start_date, '%Y-%m-%d'), timezone.get_current_timezone())
+    end_date = timezone.make_aware(datetime.strptime(end_date, '%Y-%m-%d'), timezone.get_current_timezone())
+
+    # Query the ingredients
+    ingredients = Ingredient.objects.all()
+
+    # Determine the status for each ingredient based on the quantity and minimum threshold
+    for ingredient in ingredients:
+        if ingredient.quantity == 0:
+            ingredient.status = 'Out of stock'
+        elif ingredient.quantity < ingredient.min_threshold:
+            ingredient.status = 'Low stock'
+        else:
+            ingredient.status = 'In stock'
+
+    # Get orders within the specified date range
+    orders = Order.objects.filter(date__range=[start_date, end_date])
+
+    # Calculate Revenue: Sum of (quantity * price) for each dish in the orders
+    revenue_query = OrderDetails.objects.filter(order__in=orders).annotate(
+        total_revenue=F('quantity') * F('dish__price')
+    )
+    print(f"Revenue Query: {revenue_query.query}")  # This prints the SQL query
+
+    revenue = revenue_query.aggregate(total_revenue=Sum('total_revenue'))['total_revenue']
+    print(f"Calculated Revenue: {revenue}")  # Debugging: Show the revenue value
+
+    # Calculate Cost: Sum of the ingredient cost for each dish ordered
+    total_cost = 0
+    for order in orders:
+        order_details = OrderDetails.objects.filter(order=order)
+        for order_detail in order_details:
+            recipe_details = RecipeDetails.objects.filter(dish=order_detail.dish)
+            for recipe in recipe_details:
+                total_cost += recipe.quantity_used * recipe.ingredient.price_per_unit
+
+    # Profit = Revenue - Cost
+    profit = revenue - total_cost
+
+    context = {
         'start_date': start_date,
         'end_date': end_date,
-        'report_items': report_items  
+        'report_items': report_items,
+        'ingredients': ingredients,
+        'revenue': revenue,
+        'cost': total_cost,
+        'profit': profit,
     }
+
     return render(request, 'hananApp/report.html', context)

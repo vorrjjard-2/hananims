@@ -108,11 +108,11 @@ input[type="checkbox"] {
         <div class="form-group">
             <label for="report-options">Include in Report:</label>
             <div id="report-options">
-                <label><input type="checkbox" name="report_items" checked> Current Inventory Level</label><br>
-                <label><input type="checkbox" name="report_items" checked> Low Stock Categorization</label><br>
-                <label><input type="checkbox" name="report_items" checked> Dish Sales and Tally</label><br>
-                <label><input type="checkbox" name="report_items" checked> Financial Details (Profit Margin, Revenue, Profit)</label><br>
-                <label><input type="checkbox" name="report_items" checked> Inventory Usage</label>
+                <label><input type="checkbox" name="report_items" value="current_inventory" {% if 'current_inventory' in report_items %}checked{% endif %}> Current Inventory</label><br>
+                <label><input type="checkbox" name="report_items" value="low_stock" {% if 'low_stock' in report_items %}checked{% endif %}> Low Stock</label><br>
+                <label><input type="checkbox" name="report_items" value="financial_overview" {% if 'financial_overview' in report_items %}checked{% endif %}> Financial Overview</label><br>
+                <label><input type="checkbox" name="report_items" value="dish_sales" {% if 'dish_sales' in report_items %}checked{% endif %}> Dish Sales Performance</label><br>
+                <label><input type="checkbox" name="report_items" value="inventory_usage" {% if 'inventory_usage' in report_items %}checked{% endif %}> Inventory Usage</label>
             </div>
         </div>
 
@@ -124,5 +124,4 @@ input[type="checkbox"] {
         </div>
     </form>
 </div>
-
 {% endblock %}
