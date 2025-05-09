@@ -1,0 +1,128 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}List of Ingredients - Hanan IMS{% endblock %}
+
+{% block content %}
+
+<head>
+    <style>
+        body {
+    margin: 0;
+    background-color: #f8f9fa;
+}
+
+.main-content {
+    margin-left: 240px;
+    padding: 30px;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #333;
+}
+
+.form-container {
+    background-color: #FFF;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"], input[type="checkbox"] {
+    padding: 5px;
+    font-size: 1rem;
+    margin-top: 8px;
+}
+
+input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.form-buttons {
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.btn-back {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.btn-back:hover {
+    background-color: #ddd;
+}
+
+.btn-generate {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-generate:hover {
+    background-color: #45a049;
+}
+
+.btn-save-pdf {
+    background-color: #009688;
+    color: white;
+}
+
+.btn-save-pdf:hover {
+    background-color: #00796b;
+}
+    </style>
+</head>
+
+<div class="main-content">
+    <h1 class="text-center">Generate Report</h1>
+    <form method="POST" class="form-container">
+        {% csrf_token %}
+        
+        <!-- Date Range Selection -->
+        <div class="form-group">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+
+        <!-- Report Options -->
+        <div class="form-group">
+            <label for="report-options">Include in Report:</label>
+            <div id="report-options">
+                <label><input type="checkbox" name="report_items" checked> Current Inventory Level</label><br>
+                <label><input type="checkbox" name="report_items" checked> Low Stock Categorization</label><br>
+                <label><input type="checkbox" name="report_items" checked> Dish Sales and Tally</label><br>
+                <label><input type="checkbox" name="report_items" checked> Financial Details (Profit Margin, Revenue, Profit)</label><br>
+                <label><input type="checkbox" name="report_items" checked> Inventory Usage</label>
+            </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="form-buttons">
+            <button type="button" class="btn btn-back">Back</button>
+            <button type="submit" class="btn btn-generate">Generate</button>
+            <button type="submit" class="btn btn-save-pdf">Save as PDF</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

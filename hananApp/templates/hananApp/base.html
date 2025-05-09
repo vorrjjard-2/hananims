@@ -126,7 +126,17 @@
             <div class="brand-logo">
                 <a href="/"><img src="{% static 'hananApp/logo.png' %}" alt="Made Italian Logo" /></a>
             </div>
-
+             <!-- View Inventory -->
+             <div class="nav-section">
+                <a href="/" class="sidebar-link">
+                    <div class="d-flex align-items-start">
+                        <img src="{% static 'hananApp/clipboard.png' %}" alt="Inventory" class="icon me-2" />
+                        <div><span>Inventory</span></div>
+                    </div>
+                </a>
+                <a href="/update_inventory" class="sidebar-subtext">Update Inventory</a>
+            </div>
+            <hr class="nav-divider" />
             <!-- View Ingredients -->
             <div class="nav-section">
                 <a href="/view_ingredients" class="sidebar-link">
@@ -164,7 +174,7 @@
 
             <!-- Generate Report (disabled) -->
             <div class="nav-section">
-                <a href="#" class="sidebar-link disabled-link">
+                <a href="/generate_report" class="sidebar-link">
                     <div class="d-flex align-items-start">
                         <img src="{% static 'hananApp/report.png' %}" alt="Report" class="icon me-2" />
                         <div><span>Generate Report</span></div>

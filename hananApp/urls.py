@@ -28,4 +28,6 @@ urlpatterns = [
     path('add_dish', views.add_dish, name='add_dish'),
     path('add_ingredient', views.add_ingredient, name="add_ingredient"),
     path('view_ingredients', views.view_ingredients, name='view_ingredients'),
+    path('update_inventory', views.update_inventory, name="update_inventory"),
+    path('generate_report', views.generate_report, name="generate_report")
 ]

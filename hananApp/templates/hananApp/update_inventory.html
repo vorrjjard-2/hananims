@@ -1,0 +1,115 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}List of Ingredients - Hanan IMS{% endblock %}
+
+{% block content %}
+
+<!-- templates/hananApp/update_inventory.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Inventory</title>
+    <link rel="stylesheet" href="{% static 'hananApp/style.css' %}">
+    <style>
+        select, input[type="number"] {
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .entry-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .entry-row select, .entry-row input {
+            flex: 1;
+        }
+
+        .entry-row input[type="radio"] {
+            margin: 0 5px;
+        }
+
+        .button-area {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .add-entry {
+            background-color: #EBDDC9;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+    <div style="background-color: #1D6A2E; color: white; padding: 15px 20px; border-radius: 10px 10px 0 0;">
+        <h2 style="margin: 0;">Update Inventory</h2>
+        <p style="margin: 0; font-size: 0.9rem;">Date: {{ now|date:"F d, Y, g:iA" }}</p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div id="entries">
+            <div class="entry-row">
+                <select name="ingredient">
+                    {% for ingredient in ingredients %}
+                        <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <div>
+                    <label><input type="radio" name="action" value="add" checked> Add</label>
+                    <label><input type="radio" name="action" value="reduce"> Reduce</label>
+                </div>
+
+                <input type="number" name="amount" value="0" min="0" step="0.01">
+                <select name="unit">
+                    <option value="g">g</option>
+                    <option value="pcs">pcs</option>
+                </select>
+
+                <input type="number" name="cost" value="0.00" step="0.01">
+            </div>
+        </div>
+
+        <div class="add-entry" onclick="addEntry()">+ Add New Entry</div>
+
+        <div class="button-area">
+            <a href="#" class="btn btn-danger">Cancel</a>
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addEntry() {
+        const container = document.getElementById('entries');
+        const firstRow = container.firstElementChild;
+        const newRow = firstRow.cloneNode(true);
+
+        // Reset values
+        newRow.querySelectorAll('input, select').forEach(el => {
+            if (el.type === 'number') el.value = 0;
+            if (el.type === 'radio') el.checked = el.value === 'add';
+        });
+
+        container.appendChild(newRow);
+    }
+</script>
+
+</body>
+</html>
+
+
+
+{% endblock %}

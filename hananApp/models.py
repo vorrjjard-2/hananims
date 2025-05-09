@@ -17,6 +17,7 @@ class Ingredient(models.Model):
     quantity = models.FloatField()
     priority = models.IntegerField(choices=PRIORITIES)
     unit = models.CharField(max_length=10,choices=UNITS)
+    price_per_unit = models.FloatField()
 
     def __str__(self):
         return self.name

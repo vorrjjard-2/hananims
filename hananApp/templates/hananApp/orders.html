@@ -39,6 +39,28 @@
 </head>
 <body>
     <h1>Orders and Details</h1>
+    <h2>Dishes Sold on {{ today|date:"F d, Y" }}</h2>
+<table style="width:100%; border-collapse: collapse; margin-bottom: 30px;">
+    <thead>
+        <tr style="background-color:#f0f0f0;">
+            <th>Dish</th>
+            <th>Quantity Sold</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in todays_sales %}
+            <tr>
+                <td>{{ item.dish__name }}</td>
+                <td>{{ item.total_sold }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="2">No dishes sold today.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
     <table>
         <thead>
             <tr>

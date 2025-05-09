@@ -7,7 +7,7 @@ from .utils import priority_queue, insertion_sort, merge_sort
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from collections import defaultdict, deque
-
+from django.db.models import Sum
 
 from django.db.models import Q, Prefetch
 
@@ -16,6 +16,8 @@ from django.db.models import F, FloatField, ExpressionWrapper
 from django.shortcuts import render
 from django.db.models import Prefetch
 from .models import Ingredient, Dish, RecipeDetails
+
+from django.utils import timezone
 
 
 def dashboard(request):
@@ -86,7 +88,6 @@ def dashboard(request):
 
     return render(request, "hananApp/dashboard.html", context)
 
-
 def replenish_ingredient(request):
     if request.method == 'GET':
         # Get parameters from the request
@@ -116,8 +117,22 @@ def replenish_ingredient(request):
     return redirect('dashboard')
 
 def orders(request):
-    orders = Order.objects.prefetch_related('orderdetails_set__dish')
-    context = {'orders':orders}
+    orders = Order.objects.prefetch_related('orderdetails_set__dish').order_by('-date')
+
+    today = timezone.now().date()
+    todays_sales = (
+        OrderDetails.objects
+        .filter(order__date__date=today)
+        .values('dish__name')
+        .annotate(total_sold=Sum('quantity'))
+        .order_by('-total_sold')
+    )
+
+    context = {
+        'orders': orders,
+        'todays_sales': todays_sales,
+        'today': today
+    }
     return render(request, 'hananApp/orders.html', context)
 
 from django.db import transaction
@@ -243,6 +258,16 @@ def add_ingredient(request):
             messages.error(request, "Minimum threshold must be a valid float.")
             return render(request, 'hananApp/add_ingredient.html', {'form_data': request.POST})
 
+        try:
+            price_per_unit = float(request.POST.get('price_per_unit'))
+            if price_per_unit <= 0:
+                messages.error(request, "Price per unit must be greater than 0.")
+                return render(request, 'hananApp/add_ingredient.html', {'form_data' : request.POST})
+        except ValueError:
+            messages.error(request, "Price must be a valid float.")
+            return render(request, 'hananApp/add_ingredient.html', {'form_data' : request.POST})
+
+
         requnit = request.POST.get("unit")
         if not requnit:
             messages.error(request, "Unit must be selected.")
@@ -259,7 +284,8 @@ def add_ingredient(request):
                 quantity=reqquantity,
                 min_threshold=reqmin_threshold,
                 unit=requnit,
-                priority=reqpriority
+                priority=reqpriority,
+                price_per_unit=price_per_unit
             )
             messages.success(request, "Ingredient added successfully!")
             print(f"Ingredient {ingredient} created successfully.")
@@ -282,3 +308,66 @@ def dishes(request):
     }
 
     return render(request, 'hananApp/dishes.html', context)
+
+def update_inventory(request):
+    if request.method == 'POST':
+        entries = request.POST.getlist('ingredient')
+        actions = request.POST.getlist('action')
+        amounts = request.POST.getlist('amount')
+        units = request.POST.getlist('unit')
+        costs = request.POST.getlist('cost')
+
+        for i in range(len(entries)):
+            try:
+                ingredient = Ingredient.objects.get(pk=entries[i])
+                amount = float(amounts[i])
+                cost = float(costs[i])
+                action = actions[i]
+
+                if action == 'add':
+                    ingredient.quantity += amount
+                elif action == 'reduce':
+                    ingredient.quantity = max(0, ingredient.quantity - amount)
+
+                ingredient.save()
+
+            except Exception as e:
+                print(f"Error processing row {i}: {e}")
+                continue
+
+        return redirect('dashboard') 
+
+    ingredients = Ingredient.objects.all()
+    context = {'ingredients': ingredients, 'now': timezone.now()}
+    return render(request, 'hananApp/update_inventory.html', context)
+
+def generate_report(request):
+
+    report_items = []
+
+    if request.method == "POST":
+
+        start_date = "2024-11-17"
+        end_date = "2024-11-24"
+
+        start_date = request.POST.get('start_date', start_date)
+        end_date = request.POST.get('end_date', end_date)
+        report_items = request.POST.getlist('report_items')  
+        
+        if 'current_inventory_level' in report_items:
+            pass
+        if 'low_stock_categorization' in report_items:
+            pass
+        if 'dish_sales_and_tally' in report_items:
+            pass
+        if 'financial_details' in report_items:
+            pass
+        if 'inventory_usage' in report_items:
+            pass
+
+    context =  {
+        'start_date': start_date,
+        'end_date': end_date,
+        'report_items': report_items  
+    }
+    return render(request, 'hananApp/report.html', context)
