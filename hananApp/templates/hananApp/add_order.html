@@ -1,0 +1,84 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}Dashboard - Hanan IMS{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Order</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add New Order</h1>
+    {% if error %}
+    <div style="color: red; margin-bottom: 20px;">
+        {{ error }}
+    </div>
+{% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Dish Name</th>
+                    <th>Order?</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dish in dishes %}
+                    <tr>
+                        <td>{{ dish.name }}</td>
+                        <td>
+                            <input type="checkbox" name="dish_{{ dish.id }}" onchange="toggleQuantity(this, 'quantity_{{ dish.id }}')">
+                        </td>
+                        <td>
+                            <input type="number" name="dish_{{ dish.id }}" id="quantity_{{ dish.id }}" min="1" value="0" disabled>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="submit-button">Submit</button>
+    </form>
+    <script>
+        function toggleQuantity(checkbox, quantityFieldId) {
+            const quantityField = document.getElementById(quantityFieldId);
+            if (checkbox.checked) {
+                quantityField.disabled = false;
+                quantityField.value = 1; // Set default value to 1
+            } else {
+                quantityField.disabled = true;
+                quantityField.value = 0; // Reset to 0
+            }
+        }
+    </script>
+</body>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}Dashboard - Hanan IMS{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Dish</title>
+
+    <!-- Include Bootstrap CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .ingredient-select {
+            width: 100%;
+        }
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .alert {
+            display: none;
+        }
+
+        /* Custom button style */
+        .btn-primary {
+            background-color: #239D13;
+            border-color: #239D13;
+        }
+
+        .btn-primary:hover {
+            background-color: #1c7c0e;  /* Slightly darker green on hover */
+            border-color: #1c7c0e;
+        }
+
+        .btn-primary:focus, .btn-primary:active {
+            box-shadow: 0 0 0 0.25rem rgba(35, 157, 19, 0.5);  /* Slight green shadow on focus/active */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Add New Dish</h1>
+
+        <form method="POST" id="dish-form">
+            {% csrf_token %}
+            
+            <!-- Dish Name -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Dish Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="price" class="form-label">Dish Price (PHP):</label>
+                <input type="number" id="price" name="price" class="form-control" step="0.01" min="0" required>
+            </div>
+
+            <h2 class="my-4">Ingredients</h2>
+
+            <!-- Alert for duplicate ingredients -->
+            <div class="alert alert-warning" role="alert" id="duplicate-alert">
+                You cannot use duplicate ingredients.
+            </div>
+
+            <table id="ingredients-table" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <!-- Ingredient Select2 Dropdown -->
+                            <select class="ingredient-select form-control" name="ingredient_1" required>
+                                {% for ingredient in ingredients %}
+                                    <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="quantity_1" class="form-control" min="1" placeholder="Quantity" required>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-success add-row">Add Ingredient</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let selectedIngredients = [];  // Array to store selected ingredient IDs
+            let rowIndex = 2;  // Start from the second row
+    
+            // Initialize Select2 for existing ingredient dropdown
+            $('.ingredient-select').select2({
+                placeholder: "Search for an ingredient",
+                allowClear: true
+            });
+    
+            // Add new row for ingredients
+            $(".add-row").click(function() {
+                let duplicateAlert = $("#duplicate-alert");
+                duplicateAlert.hide(); // Hide the alert initially
+    
+                // Append new row with ingredient dropdown and quantity input
+                let newRow = `<tr>
+                                <td>
+                                    <select class="ingredient-select form-control" name="ingredient_${rowIndex}" required>
+                                        {% for ingredient in ingredients %}
+                                            <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="quantity_${rowIndex}" class="form-control" min="1" placeholder="Quantity" required>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger remove-row">Remove</button>
+                                </td>
+                            </tr>`;
+                $("#ingredients-table tbody").append(newRow);
+    
+                // Reinitialize Select2 for the new ingredient select field
+                let newSelect = $(`#ingredients-table tbody tr:last-child .ingredient-select`);
+                newSelect.select2({
+                    placeholder: "Search for an ingredient",
+                    allowClear: true
+                });
+    
+                rowIndex++;  // Increment row index
+            });
+    
+            // Detect changes in any ingredient dropdown
+            $(document).on('change', '.ingredient-select', function() {
+                let duplicateAlert = $("#duplicate-alert");
+                duplicateAlert.hide(); // Hide the alert initially
+    
+                // Collect all selected ingredient IDs
+                let ingredientIds = [];
+                let isDuplicate = false;
+                $(".ingredient-select").each(function() {
+                    let ingredientId = $(this).val();
+                    if (ingredientId) {
+                        if (ingredientIds.includes(ingredientId)) {
+                            isDuplicate = true;  // Found a duplicate
+                        }
+                        ingredientIds.push(ingredientId);
+                    }
+                });
+    
+                // Handle duplicates
+                if (isDuplicate) {
+                    duplicateAlert.show(); // Show duplicate alert
+                    $(this).val(null).trigger('change'); // Clear the last selected duplicate
+                }
+    
+                selectedIngredients = ingredientIds; // Update the global list of selected ingredients
+            });
+    
+            // Remove row functionality
+            $(document).on('click', '.remove-row', function() {
+                // Remove the row and update the selected ingredients
+                let ingredientId = $(this).closest('tr').find('select').val();
+                selectedIngredients = selectedIngredients.filter(id => id !== ingredientId);
+                $(this).closest('tr').remove();
+            });
+    
+            // Form submission validation
+            $("#dish-form").submit(function(event) {
+                let duplicateAlert = $("#duplicate-alert");
+                duplicateAlert.hide(); // Hide the alert initially
+    
+                // Check for duplicate ingredients
+                let ingredientIds = [];
+                let isDuplicate = false;
+                $(".ingredient-select").each(function() {
+                    let ingredientId = $(this).val();
+                    if (ingredientIds.includes(ingredientId)) {
+                        isDuplicate = true; // Found a duplicate
+                    }
+                    ingredientIds.push(ingredientId);
+                });
+    
+                // If duplicates exist, prevent submission
+                if (isDuplicate) {
+                    duplicateAlert.show(); // Show duplicate alert
+                    event.preventDefault(); // Prevent form submission
+                }
+            });
+        });
+    </script>
+
+    <!-- Include Bootstrap JS (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}View Dishes - Hanan IMS{% endblock %}
+
+{% block content %}
+<style>
+    .table-wrapper {
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .table-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px 15px;
+        font-size: 20px;
+        font-weight: bold;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .table-header .last-update {
+        font-size: 14px;
+        font-weight: normal;
+        color: white;
+        margin-top: 5px;
+    }
+
+    .dishes-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fdf7ed;
+    }
+
+    .dishes-table th, .dishes-table td {
+        border: 1px solid #bbb;
+        padding: 12px 15px;
+        font-size: 15px;
+        text-align: left;
+    }
+
+    .dishes-table th {
+        background-color: #c3d6b1;
+        font-weight: bold;
+    }
+
+    .edit-btn, .see-more-link {
+        color: blue;
+        text-decoration: underline;
+        font-weight: normal;
+        font-size: 14px;
+    }
+
+    .edit-btn:hover, .see-more-link:hover {
+        opacity: 0.8;
+    }
+
+    .add-dish-btn {
+        margin: 10px 30px 0 auto;
+        display: block;
+        background-color: #bfbfbf;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .popup-box {
+        position: fixed;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 85%;
+        height: 70%;
+        background-color: #fdf9f0;
+        padding: 50px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: none;
+        z-index: 9999;
+        border: 1px solid #333;
+        overflow-y: auto;
+    }
+
+    .popup-layout {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .popup-left h5 {
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+
+    .popup-left strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .popup-left ul {
+        padding-left: 20px;
+        margin-top: 0;
+        font-size: 15px;
+        list-style: disc;
+    }
+
+    .popup-right {
+        text-align: right;
+        font-size: 15px;
+        line-height: 1.8;
+        white-space: nowrap;
+    }
+
+    .popup-footer {
+        text-align: right;
+        margin-top: 40px;
+    }
+
+    .popup-footer a {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .popup-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="table-wrapper">
+    <div class="table-header">
+        <div>View Dishes</div>
+        <div class="last-update">Last Update: {{ last_updated|default:"—" }}</div>
+    </div>
+
+    <table class="dishes-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">Edit</th>
+                <th style="width: 40px;">ID</th>
+                <th style="width: 200px;">Dish</th>
+                <th style="width: 160px;">Selling Price (PHP)</th>
+                <th>Financial Details and Ingredients List</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dish in dishes %}
+            <tr>
+                <td><a href="{% url 'edit_dish' dish.id %}" class="edit-btn">edit</a></td>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ dish.name }}</td>
+                <td>{{ dish.price }} PHP</td>
+                <td>
+                    <a href="#"
+                       class="see-more-link"
+                       data-name="{{ dish.name }}"
+                       data-ingredients='[
+                           {% for rd in dish.recipedetails_set.all %}
+                               {"name": "{{ rd.ingredient.name }}", "quantity": "{{ rd.quantity_used }}", "unit": "{{ rd.ingredient.get_unit_display }}"}
+                               {% if not forloop.last %},{% endif %}
+                           {% endfor %}
+                       ]'>
+                       see more
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<button class="add-dish-btn" disabled>+ Add New Dish</button>
+
+<div id="dish-popup" class="popup-box"></div>
+
+<script>
+    document.querySelectorAll('.see-more-link').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const dishName = this.dataset.name;
+            const ingredients = JSON.parse(this.dataset.ingredients);
+
+            let ingredientsHTML = `<ul>`;
+            ingredients.forEach(i => {
+                ingredientsHTML += `<li>${i.name}: ${i.quantity} ${i.unit}</li>`;
+            });
+            ingredientsHTML += `</ul>`;
+
+            const popup = document.getElementById('dish-popup');
+            popup.innerHTML = `
+                <div class="popup-layout">
+                    <div class="popup-left">
+                        <h5>NAME: ${dishName}</h5>
+                        <strong>INGREDIENTS:</strong>
+                        ${ingredientsHTML}
+                    </div>
+                    <div class="popup-right">
+                        <strong>SELLING PRICE:</strong> PHP —<br>
+                        <strong>ESTIMATED COST:</strong> PHP —
+                    </div>
+                </div>
+                <div class="popup-footer">
+                    <a href="#" onclick="hidePopup()">Back to View Dishes</a>
+                </div>
+            `;
+            popup.style.display = 'block';
+        });
+    });
+
+    function hidePopup() {
+        document.getElementById('dish-popup').style.display = 'none';
+    }
+</script>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,262 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}Update Inventory - Hanan IMS{% endblock %}
+
+{% block content %}
+<style>
+    .inventory-box {
+        background-color: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .inventory-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px 10px;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .inventory-subheader {
+        color: white;
+        font-size: 14px;
+        padding: 0 30px 10px;
+        margin-bottom: -1px;
+    }
+
+    .inventory-table {
+        width: 100%;
+        background-color: #fdf7ed;
+        border-collapse: collapse;
+        margin-top: -1px;
+    }
+
+    .inventory-table th {
+        background-color: #c3d6b1;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        border: 1px solid #ccc;
+    }
+
+    .inventory-table td {
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    select, input[type="number"], input[type="text"] {
+        background-color: #e4caa7;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .action-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .action-toggle button {
+        padding: 6px 20px;
+        background-color: #f3e4cc;
+        border: none;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100px;
+    }
+
+    .action-toggle button.active {
+        background-color: #a08864;
+        color: white;
+    }
+
+    .amount-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .amount-box button {
+        padding: 6px 10px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        background-color: #f0e4d0;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .pill-input {
+        background-color: #e4caa7;
+        border: none;
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-size: 16px;
+        width: 120px;
+        text-align: center;
+    }
+
+    .add-entry {
+        background-color: #e4caa7;
+        padding: 16px;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .form-buttons {
+        padding: 20px 30px;
+        text-align: right;
+        background-color: #fff;
+    }
+
+    .form-buttons .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        margin-left: 10px;
+    }
+
+    .btn-danger {
+        background-color: #f26957;
+        color: white;
+        border: none;
+    }
+
+    .btn-success {
+        background-color: #3caa37;
+        color: white;
+        border: none;
+    }
+</style>
+
+<div class="inventory-box">
+    <div class="inventory-header">Update Inventory</div>
+    <div class="inventory-subheader">Date: {{ now|date:"F d, Y, g:iA" }}</div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <table class="inventory-table" id="entry-table">
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th>Change to Inventory</th>
+                    <th>Amount</th>
+                    <th>Total Cost (PHP)</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+            <tbody id="entry-body">
+                <tr>
+                    <td>
+                        <select name="ingredient" class="rounded-select">
+                            {% for ingredient in ingredients %}
+                                <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <div class="action-toggle">
+                            <button type="button" class="active" onclick="toggleAction(this, 'add')">Add</button>
+                            <button type="button" onclick="toggleAction(this, 'reduce')">Reduce</button>
+                            <input type="hidden" name="action-0" value="add">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="amount-box">
+                            <button type="button" onclick="adjustAmount(this, -1)">−</button>
+                            <input type="number" name="amount-0" min="0" value="0" style="width: 60px;">
+                            <button type="button" onclick="adjustAmount(this, 1)">+</button>
+                            <select name="unit-0" style="border-radius: 10px;">
+                                <option value="g">g</option>
+                                <option value="kg">kg</option>
+                                <option value="ml">ml</option>
+                                <option value="l">l</option>
+                                <option value="pcs">pcs</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="pill-input" name="cost-0" value="000.00">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeEntry(this)">Remove</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="add-entry" onclick="addEntry()">+ Add New Entry</div>
+
+        <div class="form-buttons">
+            <a href="#" class="btn btn-danger">Cancel</a>
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleAction(btn, type) {
+        const container = btn.closest('.action-toggle');
+        container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        container.querySelector('input[type="hidden"]').value = type;
+    }
+
+    function adjustAmount(btn, delta) {
+        const input = btn.parentElement.querySelector('input[type="number"]');
+        let value = parseFloat(input.value) || 0;
+        value += delta;
+        if (value < 0) value = 0;
+        input.value = value;
+    }
+
+    function addEntry() {
+        const tbody = document.getElementById("entry-body");
+        const index = tbody.children.length;
+        const clone = tbody.children[0].cloneNode(true);
+
+        // Update names and clear values
+        clone.querySelector('select[name="ingredient"]').selectedIndex = 0;
+        clone.querySelector('input[name^="amount"]').name = `amount-${index}`;
+        clone.querySelector('input[name^="amount"]').value = 0;
+        clone.querySelector('select[name^="unit"]').name = `unit-${index}`;
+        clone.querySelector('input[name^="cost"]').name = `cost-${index}`;
+        clone.querySelector('input[name^="cost"]').value = "000.00";
+        clone.querySelector('input[type="hidden"]').name = `action-${index}`;
+        clone.querySelector('input[type="hidden"]').value = "add";
+
+        clone.querySelectorAll('.action-toggle button').forEach((btn, i) => {
+            btn.classList.toggle('active', i === 0);
+            btn.setAttribute("onclick", `toggleAction(this, '${i === 0 ? 'add' : 'reduce'}')`);
+        });
+
+        // Update Remove button if missing
+        clone.querySelector('td:last-child').innerHTML = `<button type="button" class="btn btn-danger btn-sm" onclick="removeEntry(this)">Remove</button>`;
+
+        tbody.appendChild(clone);
+    }
+
+    function removeEntry(btn) {
+        const row = btn.closest('tr');
+        const tbody = document.getElementById("entry-body");
+        if (tbody.children.length > 1) {
+            row.remove();
+        } else {
+            alert("At least one entry must remain.");
+        }
+    }
+</script>
+{% endblock %}

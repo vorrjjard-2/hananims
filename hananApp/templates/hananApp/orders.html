@@ -1,0 +1,93 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}Dashboard - Hanan IMS{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders and Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3c6e47;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>Orders and Details</h1>
+    <h2>Dishes Sold on {{ today|date:"F d, Y" }}</h2>
+<table style="width:100%; border-collapse: collapse; margin-bottom: 30px;">
+    <thead>
+        <tr style="background-color:#f0f0f0;">
+            <th>Dish</th>
+            <th>Quantity Sold</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in todays_sales %}
+            <tr>
+                <td>{{ item.dish__name }}</td>
+                <td>{{ item.total_sold }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="2">No dishes sold today.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Order ID</th>
+                <th>Dishes Ordered and Quantities</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.date }}</td>
+                    <td>{{ order.id }}</td>
+                    <td>
+                        <ul>
+                            {% for detail in order.orderdetails_set.all %}
+                                <li>
+                                    {{ detail.dish.name }}: {{ detail.quantity }}
+                                </li>
+                            {% empty %}
+                                <li>No dishes ordered</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+{% endblock %}

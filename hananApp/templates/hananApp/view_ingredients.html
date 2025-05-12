@@ -1,0 +1,42 @@
+{% extends 'hananApp/base.html' %}
+
+{% block title %}List of Ingredients - Hanan IMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card p-4" style="background-color: white;">
+            <h3 class="fw-bold mb-3" style="color: #3c6e47;">List of Ingredients</h3>
+            
+            {% if ingredients %}
+                <table class="table table-striped" style="color: white; background-color: #4e7c4e;">
+                    <thead style="background-color: #3c6e47;">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Quantity</th>
+                            <th>Minimum Threshold</th>
+                            <th>Unit</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: #4e7c4e;">
+                        {% for ingredient in ingredients %}
+                            <tr>
+                                <td>{{ ingredient.id }}</td>
+                                <td>{{ ingredient.name }}</td>
+                                <td>{{ ingredient.quantity }}</td>
+                                <td>{{ ingredient.min_threshold }}</td>
+                                <td>{{ ingredient.unit }}</td>
+                                <td>{{ ingredient.priority }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No ingredients available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
