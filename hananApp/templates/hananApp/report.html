@@ -1,243 +1,143 @@
 {% extends 'hananApp/base.html' %}
 
-{% block title %}Dashboard - Hanan IMS{% endblock %}
+{% block title %}IMS Report - Hanan IMS{% endblock %}
 
 {% block content %}
-
 <style>
-body {
-    margin: 0;
-    background-color: #f8f9fa;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
 
-.main-content {
-    margin-left: 240px; /* Offset for sidebar */
-    padding: 30px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+    .report-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
 
-/* Sidebar Styling */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 240px;
-    background-color: #FDF9F0;
-    border-right: 2px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    z-index: 1000;
-    padding-top: 20px;
-}
+    .report-title {
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #064420;
+    }
 
-.sidebar-inner {
-    overflow-y: auto;
-    padding: 20px;
-    flex-grow: 1;
-}
+    .report-dates {
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 30px;
+    }
 
-.sidebar-link {
-    display: block;
-    color: #333;
-    text-decoration: none;
-    font-size: 1.1rem;
-    padding: 10px;
-}
+    h3 {
+        font-size: 22px;
+        color: #064420;
+        margin-top: 40px;
+        margin-bottom: 16px;
+    }
 
-.sidebar-link:hover {
-    color: #007bff;
-    background-color: #e9ecef;
-    border-radius: 5px;
-}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 40px;
+    }
 
-.sidebar-subtext {
-    font-size: 0.875rem;
-    color: #555;
-    display: block;
-    margin-left: 32px;
-    margin-top: 4px;
-}
+    table th,
+    table td {
+        padding: 14px;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 15px;
+    }
 
-.sidebar-subtext:hover {
-    text-decoration: underline;
-}
+    table th {
+        background-color: #c3d6b1;
+        color: #222;
+    }
 
-.sidebar .active {
-    color: #007bff;
-    font-weight: bold;
-    background-color: #f1f1f1;
-}
+    table td {
+        background-color: #fdf9f0;
+    }
 
-/* Tabs Container */
-.tabs {
-    display: flex;
-    flex-direction: column; /* Arrange tabs vertically */
-    padding: 20px;
-}
+    .badge {
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
 
-.tab {
-    display: none;  /* Hide all tabs initially */
-    background-color: #f9f9f9;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
+    .bg-success {
+        background-color: #3caa37;
+        color: white;
+    }
 
-.tab.active {
-    display: block;  /* Show active tab */
-}
+    .bg-warning {
+        background-color: #ffc107;
+        color: #222;
+    }
 
-/* Tab Titles */
-.tab h2 {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 20px;
-}
+    .bg-danger {
+        background-color: #f44336;
+        color: white;
+    }
 
-/* Tab content for Current Inventory, Low Stock, etc. */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
+    .in-stock {
+        color: #3caa37;
+        font-weight: bold;
+    }
 
-table th,
-table td {
-    padding: 12px;
-    text-align: left;
-    border: 1px solid #ddd;
-}
+    .low-stock {
+        color: #ff5722;
+        font-weight: bold;
+    }
 
-table th {
-    background-color: #f1f1f1;
-    color: #333;
-}
-
-table td {
-    background-color: #fff;
-}
-
-.low-stock {
-    color: #ff5722;
-    font-weight: bold;
-}
-
-.in-stock {
-    color: #4caf50;
-    font-weight: bold;
-}
-
-.out-of-stock {
-    color: #f44336;
-    font-weight: bold;
-}
-
-/* Buttons and Other Elements */
-.btn-add-order {
-    background-color: #036C40;
-    color: white;
-    font-weight: bold;
-    padding: 10px;
-    border-radius: 8px;
-    display: block;
-    width: calc(100% - 40px);
-    margin: 0 auto 10px;
-    text-align: center;
-    text-decoration: none;
-}
-
-.btn-add-order:hover {
-    background-color: #025636;
-}
-
-.checkered {
-    height: 60px;
-    background-size: 100% 60px;
-    background-position: bottom;
-    background-repeat: no-repeat;
-}
-
-.nav-section {
-    margin-bottom: 30px;
-}
-
-.nav-divider {
-    border: none;
-    border-top: 1px solid #333;
-    margin: 16px 0;
-}
-
-.disabled-link {
-    pointer-events: none;
-    opacity: 1;
-    color: #000;
-}
-
-.low-stock {
-    color: #ff5722; /* Red/orange for low stock */
-    font-weight: bold;
-}
-
-.in-stock {
-    color: #4caf50; /* Green for in stock */
-    font-weight: bold;
-}
-
-.out-of-stock {
-    color: #f44336; /* Red for out of stock */
-    font-weight: bold;
-}
+    .out-of-stock {
+        color: #f44336;
+        font-weight: bold;
+    }
 </style>
 
-<div class="main-content">
-    <h1 class="text-center">IMS Report</h1>
-    <p class="text-center">Date Range: {{ start_date }} - {{ end_date }}</p>
+<div class="report-container">
+    <div class="report-title">IMS Report</div>
+    <div class="report-dates">Date Range: {{ start_date }} – {{ end_date }}</div>
 
-    <div class="tabs">
-        {% if 'current_inventory' in report_items %}
-        <div class="tab active">
-            <h2>Current Inventory</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Ingredient</th>
-                        <th>Current Stock</th>
-                        <th>Stock Requirement</th>
-                        <th>Status</th>
-                        <th>Last Restock</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ingredient in ingredients %}
-                        <tr>
-                            <td>{{ ingredient.id }}</td>
-                            <td>{{ ingredient.name }}</td>
-                            <td>{{ ingredient.quantity }} {{ ingredient.unit }}</td>
-                            <td>{{ ingredient.min_threshold }} {{ ingredient.unit }}</td>
-                            <td class="{% if ingredient.status == 'Low stock' %}low-stock{% elif ingredient.status == 'In stock' %}in-stock{% else %}out-of-stock{% endif %}">
-                                {{ ingredient.status }}
-                            </td>
-                            <td> <!-- Logic to display last restock date can be added if available -->
-                                10/08/2024
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    {% if 'current_inventory' in report_items %}
+    <h3>Current Inventory</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ingredient</th>
+                <th>Current Stock</th>
+                <th>Stock Requirement</th>
+                <th>Status</th>
+                <th>Last Restock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingredient in ingredients %}
+            <tr>
+                <td>{{ ingredient.id }}</td>
+                <td>{{ ingredient.name }}</td>
+                <td>{{ ingredient.quantity }} {{ ingredient.unit }}</td>
+                <td>{{ ingredient.min_threshold }} {{ ingredient.unit }}</td>
+                <td class="{% if ingredient.status == 'Low stock' %}low-stock{% elif ingredient.status == 'In stock' %}in-stock{% else %}out-of-stock{% endif %}">
+                    {{ ingredient.status }}
+                </td>
+                <td>10/08/2024</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
 
     {% if 'low_stock' in report_items %}
-<div class="tab active">
-    <h2>Low Stock Ingredients</h2>
-    <table class="table table-striped table-hover text-center align-middle">
-        <thead class="table-header-green">
+    <h3>Low Stock Ingredients</h3>
+    <table>
+        <thead>
             <tr>
                 <th>Ingredient</th>
                 <th>Quantity</th>
@@ -255,7 +155,7 @@ table td {
                     <td>
                         <span class="badge 
                             {% if ingredient.priority == 3 %}bg-danger
-                            {% elif ingredient.priority == 2 %}bg-warning text-dark
+                            {% elif ingredient.priority == 2 %}bg-warning
                             {% else %}bg-success
                             {% endif %}">
                             {{ ingredient.get_priority_display }}
@@ -265,70 +165,54 @@ table td {
                 {% endif %}
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center text-muted">No low-stock ingredients</td>
+                <td colspan="4" class="text-muted">No low-stock ingredients</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-</div>
-{% endif %}
+    {% endif %}
 
     {% if 'financial_overview' in report_items %}
-        <div class="tab active">
-            <h2>Financial Overview</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>CATEGORY</th>
-                        <th>AMOUNT (PHP)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Revenue</td>
-                        <td>{{ revenue }}</td>
-                    </tr>
-                    <tr>
-                        <td>Cost</td>
-                        <td>{{ cost }}</td>
-                    </tr>
-                    <tr>
-                        <td>Profit</td>
-                        <td>{{ profit }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
+    <h3>Financial Overview</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Amount (PHP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Revenue</td><td>{{ revenue }}</td></tr>
+            <tr><td>Cost</td><td>{{ cost }}</td></tr>
+            <tr><td>Profit</td><td>{{ profit }}</td></tr>
+        </tbody>
+    </table>
     {% endif %}
-    
+
     {% if 'dish_sales' in report_items %}
-    <div class="tab active">
-        <h2>Dish Sales</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Dish Name</th>
-                    <th>Quantity Sold</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for dish in dish_sales %}
-                    <tr>
-                        <td>{{ dish.dish__name }}</td>
-                        <td>{{ dish.total_quantity }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% endif %}
-    
-{% if 'inventory_usage' in report_items %}
-<div class="tab active">
-    <h2>Inventory Usage</h2>
-    <table class="table table-striped table-hover text-center align-middle">
-        <thead class="table-header-green">
+    <h3>Dish Sales</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Dish Name</th>
+                <th>Quantity Sold</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dish in dish_sales %}
+            <tr>
+                <td>{{ dish.dish__name }}</td>
+                <td>{{ dish.total_quantity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if 'inventory_usage' in report_items %}
+    <h3>Inventory Usage</h3>
+    <table>
+        <thead>
             <tr>
                 <th>Ingredient</th>
                 <th>Total Quantity Used</th>
@@ -342,12 +226,11 @@ table td {
             </tr>
             {% empty %}
             <tr>
-                <td colspan="2" class="text-muted text-center">No ingredient usage found during this period.</td>
+                <td colspan="2" class="text-muted">No usage data found for this period.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% endif %}
 </div>
-{% endif %}
-    </div>
 {% endblock %}

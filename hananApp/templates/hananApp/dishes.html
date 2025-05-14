@@ -4,6 +4,20 @@
 
 {% block content %}
 <style>
+    .search-container {
+        margin: 20px 0 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .search-container input {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        width: 240px;
+    }
+
     .table-wrapper {
         background-color: #ffffff;
         border-radius: 15px;
@@ -20,13 +34,6 @@
         font-weight: bold;
         border-top-left-radius: 15px;
         border-top-right-radius: 15px;
-    }
-
-    .table-header .last-update {
-        font-size: 14px;
-        font-weight: normal;
-        color: white;
-        margin-top: 5px;
     }
 
     .dishes-table {
@@ -52,24 +59,11 @@
         text-decoration: underline;
         font-weight: normal;
         font-size: 14px;
+        cursor: pointer;
     }
 
     .edit-btn:hover, .see-more-link:hover {
         opacity: 0.8;
-    }
-
-    .add-dish-btn {
-        margin: 10px 30px 0 auto;
-        display: block;
-        background-color: #bfbfbf;
-        color: white;
-        font-weight: bold;
-        padding: 10px 20px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-        cursor: not-allowed;
-        opacity: 0.7;
     }
 
     .popup-box {
@@ -135,12 +129,13 @@
 </style>
 
 <div class="table-wrapper">
-    <div class="table-header">
-        <div>View Dishes</div>
-        <div class="last-update">Last Update: {{ last_updated|default:"—" }}</div>
+    <div class="table-header">View Dishes</div>
+
+    <div class="search-container">
+        <input type="text" id="dishSearch" placeholder="Search dishes...">
     </div>
 
-    <table class="dishes-table">
+    <table class="dishes-table" id="dishesTable">
         <thead>
             <tr>
                 <th style="width: 60px;">Edit</th>
@@ -155,12 +150,13 @@
             <tr>
                 <td><a href="{% url 'edit_dish' dish.id %}" class="edit-btn">edit</a></td>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ dish.name }}</td>
+                <td class="dish-name">{{ dish.name }}</td>
                 <td>{{ dish.price }} PHP</td>
                 <td>
                     <a href="#"
                        class="see-more-link"
                        data-name="{{ dish.name }}"
+                       data-price="{{ dish.price }}"
                        data-ingredients='[
                            {% for rd in dish.recipedetails_set.all %}
                                {"name": "{{ rd.ingredient.name }}", "quantity": "{{ rd.quantity_used }}", "unit": "{{ rd.ingredient.get_unit_display }}"}
@@ -176,15 +172,26 @@
     </table>
 </div>
 
-<button class="add-dish-btn" disabled>+ Add New Dish</button>
-
 <div id="dish-popup" class="popup-box"></div>
 
 <script>
+    // Filter table by dish name
+    document.getElementById('dishSearch').addEventListener('input', function () {
+        const search = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#dishesTable tbody tr');
+
+        rows.forEach(row => {
+            const name = row.querySelector('.dish-name').textContent.toLowerCase();
+            row.style.display = name.includes(search) ? '' : 'none';
+        });
+    });
+
+    // Show popup
     document.querySelectorAll('.see-more-link').forEach(link => {
         link.addEventListener('click', function (e) {
             e.preventDefault();
             const dishName = this.dataset.name;
+            const price = this.dataset.price;
             const ingredients = JSON.parse(this.dataset.ingredients);
 
             let ingredientsHTML = `<ul>`;
@@ -202,7 +209,7 @@
                         ${ingredientsHTML}
                     </div>
                     <div class="popup-right">
-                        <strong>SELLING PRICE:</strong> PHP —<br>
+                        <strong>SELLING PRICE:</strong> PHP ${price}<br>
                         <strong>ESTIMATED COST:</strong> PHP —
                     </div>
                 </div>
@@ -219,6 +226,12 @@
     }
 </script>
 {% endblock %}
+
+
+
+
+
+
 
 
 

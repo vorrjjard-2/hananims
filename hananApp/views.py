@@ -11,6 +11,9 @@ from django.db.models import Sum
 
 from django.db.models import Q, Prefetch
 
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+
 import heapq
 from django.db.models import F, FloatField, ExpressionWrapper
 from django.shortcuts import render
@@ -18,7 +21,31 @@ from django.db.models import Prefetch
 from .models import Ingredient, Dish, RecipeDetails
 
 from django.utils import timezone
+from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 
+def login_view(request):
+    error = ""
+    
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            role = user.userprofile.role
+
+            if role == 'admin':
+                return redirect('dashboard')
+            else:
+                return redirect('dashboard')
+        else:
+            error = "Invalid username or password."
+
+    return render(request, 'hananApp/login.html', {"error": error})
 
 def dashboard(request):
     # Fetch low-stock ingredients and calculate shortages
@@ -89,6 +116,18 @@ def dashboard(request):
     return render(request, "hananApp/dashboard.html", context)
 
 def replenish_ingredient(request):
+    if request.user.userprofile.role != 'admin':
+        return HttpResponse("""
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="2; url=/employee-dashboard/" />
+                </head>
+                <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h2>You are not authorized to view this page.</h2>
+                    <p>Redirecting you back in 2 seconds...</p>
+                </body>
+            </html>
+        """)
     if request.method == 'GET':
         # Get parameters from the request
         ingredient_id = request.GET.get('ingredient_id')
@@ -195,6 +234,18 @@ def add_order(request):
 
 
 def add_dish(request):
+    if request.user.userprofile.role != 'admin':
+        return HttpResponse("""
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="2; url=/dashboard/" />
+                </head>
+                <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h2>You are not authorized to view this page.</h2>
+                    <p>Redirecting you back in 2 seconds...</p>
+                </body>
+            </html>
+        """)
     if request.method == "POST":
         dish_name = request.POST.get("name")
         dish_price = request.POST.get("price")  # Grab the dish price
@@ -228,6 +279,18 @@ def add_dish(request):
     return render(request, "hananApp/add_dish.html", {"ingredients": ingredients})
 
 def add_ingredient(request):
+    if request.user.userprofile.role != 'admin':
+        return HttpResponse("""
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="2; url=/dashboard/" />
+                </head>
+                <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h2>You are not authorized to view this page.</h2>
+                    <p>Redirecting you back in 2 seconds...</p>
+                </body>
+            </html>
+        """)
     if request.method == "POST":
         reqname = request.POST.get("name")
         print(f"Ingredient Name Received: {reqname}")
@@ -311,35 +374,64 @@ def dishes(request):
     return render(request, 'hananApp/dishes.html', context)
 
 def update_inventory(request):
-    if request.method == 'POST':
-        entries = request.POST.getlist('ingredient')
-        actions = request.POST.getlist('action')
-        amounts = request.POST.getlist('amount')
-        units = request.POST.getlist('unit')
-        costs = request.POST.getlist('cost')
+    if request.user.userprofile.role != 'admin':
+        return HttpResponse("""
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="2; url=/dashboard/" />
+                </head>
+                <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h2>You are not authorized to view this page.</h2>
+                    <p>Redirecting you back in 2 seconds...</p>
+                </body>
+            </html>
+        """)
 
-        for i in range(len(entries)):
+    if request.method == 'POST':
+        total_entries = len([key for key in request.POST if key.startswith('amount-')])
+        
+        for i in range(total_entries):
             try:
-                ingredient = Ingredient.objects.get(pk=entries[i])
-                amount = float(amounts[i])
-                cost = float(costs[i])
-                action = actions[i]
+                ingredient_id = request.POST.get('ingredient')
+                action = request.POST.get(f'action-{i}')
+                amount = float(request.POST.get(f'amount-{i}'))
+                unit = request.POST.get(f'unit-{i}')
+                cost = float(request.POST.get(f'cost-{i}'))
+
+                ingredient = Ingredient.objects.get(pk=ingredient_id)
+
+                # Check unit match
+                if unit != ingredient.unit:
+                    continue  # skip if mismatched
 
                 if action == 'add':
+                    # Weighted average cost update
+                    existing_total_cost = ingredient.quantity * ingredient.price_per_unit
+                    new_total_cost = cost
+                    new_total_quantity = ingredient.quantity + amount
+
+                    if new_total_quantity > 0:
+                        new_price_per_unit = (existing_total_cost + new_total_cost) / new_total_quantity
+                        ingredient.price_per_unit = new_price_per_unit
+
                     ingredient.quantity += amount
+
                 elif action == 'reduce':
                     ingredient.quantity = max(0, ingredient.quantity - amount)
 
                 ingredient.save()
 
             except Exception as e:
-                print(f"Error processing row {i}: {e}")
+                print(f"Error processing entry {i}: {e}")
                 continue
 
-        return redirect('dashboard') 
+        return redirect('dashboard')
 
     ingredients = Ingredient.objects.all()
-    context = {'ingredients': ingredients, 'now': timezone.now()}
+    context = {
+        'ingredients': ingredients,
+        'now': timezone.now()
+    }
     return render(request, 'hananApp/update_inventory.html', context)
 
 from django.urls import reverse
@@ -452,6 +544,18 @@ from .models import Dish, RecipeDetails, Ingredient
 from django.http import JsonResponse
 
 def edit_dish(request, dish_id):
+    if request.user.userprofile.role != 'admin':
+        return HttpResponse("""
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="2; url=/dashboard/" />
+                </head>
+                <body style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h2>You are not authorized to view this page.</h2>
+                    <p>Redirecting you back in 2 seconds...</p>
+                </body>
+            </html>
+        """)
     dish = get_object_or_404(Dish, id=dish_id)
     ingredients = Ingredient.objects.all()
 

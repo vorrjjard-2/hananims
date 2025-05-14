@@ -3,89 +3,140 @@
 {% block title %}Dashboard - Hanan IMS{% endblock %}
 
 {% block content %}
-
-<!-- Custom Styles -->
 <style>
-    .header-green {
-        background-color: #064420; /* Dark green */
-        color: #ffffff; /* White text */
-        padding: 10px;
-        border-radius: 5px;
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 30px;
     }
 
-    .btn-light-green {
-        background-color: #239D13; /* Custom light green */
-        color: white;
-        border: none;
+    .dashboard-header h2 {
+        font-weight: bold;
+        color: #0c6533;
     }
 
-    .btn-light-green:hover {
-        background-color: #1d7c0c; /* Slightly darker green on hover */
+    .dashboard-header p {
+        font-size: 16px;
+        color: #444;
+    }
+
+    .dashboard-header ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 15px;
+        font-size: 15px;
+    }
+
+    .dashboard-header li::before {
+        content: "🧩";
+        margin-right: 8px;
+        color: #0c6533;
+    }
+
+    .table-section {
+        background-color: #fdf9f0;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 0;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        background-color: #0c6533;
         color: white;
+        padding: 16px 20px;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background-color: #c3d6b1;
+        padding: 12px;
+        text-align: center;
+    }
+
+    td {
+        background-color: #fdf9f0;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .text-muted {
+        color: #888 !important;
+        font-style: italic;
+    }
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 14px;
     }
 </style>
 
-<div class="container mt-5">
-    <!-- Welcome Section -->
-    <div class="welcome-section text-center mb-5">
-        <h2>Welcome to HANAN IMS</h2>
-        <p>Your one-stop solution for managing inventory, recipes, and dish preparation seamlessly.</p>
-        <p><strong>Instructions:</strong></p>
-        <ul class="list-unstyled">
-            <li>🔹 Monitor low-stock ingredients in the table below and restock them as necessary.</li>
-            <li>🔹 Review dishes impacted by ingredient shortages.</li>
-            <li>🔹 Use the navigation buttons above to update inventory, recipes, or generate reports.</li>
-        </ul>
-    </div>
+<div class="dashboard-header">
+    <h2>Welcome to HANAN IMS</h2>
+    <p>Streamline your kitchen operations with smart inventory tracking, recipe monitoring, and low-stock alerts—so you can focus on what matters most.</p>
+    <ul>
+        <li>Monitor ingredients nearing depletion and restock on time.</li>
+        <li>Identify dishes affected by ingredient shortages.</li>
+        <li>Use the sidebar to update inventory, recipes, or generate reports.</li>
+    </ul>
+</div>
 
-    <!-- Affected Dishes Table -->
-    <div class="card p-4 mb-4">
-        <h4 class="fw-bold mb-4 header-green">Affected Dishes</h4>
-        <table class="table table-striped table-hover text-center align-middle">
-            <thead class="table-header-green">
+<!-- Affected Dishes Section -->
+<div class="table-section">
+    <div class="section-title">Affected Dishes</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Dish Name</th>
+                <th>Affected Ingredients</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if affected_dishes %}
+                {% for dish in affected_dishes %}
                 <tr>
-                    <th>Dish Name</th>
-                    <th>Affected Ingredients</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if affected_dishes %}
-                    {% for dish in affected_dishes %}
-                    <tr>
-                        <td>{{ dish.name }}</td>
-                        <td>
-                            <ul class="list-unstyled mb-0">
-                                {% for ingredient in dish.affected_ingredients %}
+                    <td>{{ dish.name }}</td>
+                    <td>
+                        <ul style="list-style: none; padding-left: 0; margin: 0;">
+                            {% for ingredient in dish.affected_ingredients %}
                                 <li>{{ ingredient.name }} (Shortage Factor: {{ ingredient.shortage|floatformat:4 }})</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted">No affected dishes</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Low Stock Ingredients Table -->
-    <div class="card p-4 mb-4">
-        <h4 class="fw-bold mb-4 header-green">Low Stock Ingredients</h4>
-        <table class="table table-striped table-hover text-center align-middle">
-            <thead class="table-header-green">
-                <tr>
-                    <th>Ingredient</th>
-                    <th>Quantity</th>
-                    <th>Minimum Threshold</th>
-                    <th>Shortage</th>
-                    <th>Priority</th>
-                    <th>Action</th>
+                            {% endfor %}
+                        </ul>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="2" class="text-muted">No affected dishes</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Low Stock Ingredients Section -->
+<div class="table-section">
+    <div class="section-title">Low Stock Ingredients</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Ingredient</th>
+                <th>Quantity</th>
+                <th>Minimum Threshold</th>
+                <th>Shortage</th>
+                <th>Priority</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if ingredients %}
                 {% for ingredient in ingredients %}
                 <tr>
                     <td>{{ ingredient.name }}</td>
@@ -93,61 +144,21 @@
                     <td>{{ ingredient.min_threshold }}</td>
                     <td>{{ ingredient.shortage|floatformat:4 }}</td>
                     <td>
-                        <span class="badge {% if ingredient.priority == 3 %}bg-danger{% elif ingredient.priority == 2 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                        <span class="badge {% if ingredient.priority == 3 %}bg-danger
+                                            {% elif ingredient.priority == 2 %}bg-warning text-dark
+                                            {% else %}bg-success{% endif %}">
                             {{ ingredient.get_priority_display }}
                         </span>
                     </td>
-                    <td>
-                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#replenishModal" data-ingredient-id="{{ ingredient.id }}" data-ingredient-name="{{ ingredient.name }}">Replenish</button>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center text-muted">No low-stock ingredients</td>
                 </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-muted">No low-stock ingredients</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
 </div>
-
-<!-- Replenish Ingredient Modal -->
-<div class="modal fade" id="replenishModal" tabindex="-1" aria-labelledby="replenishModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="replenishModalLabel">Replenish Ingredient</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="GET" action="{% url 'replenish_ingredient' %}" id="replenishForm">
-                    <input type="hidden" name="ingredient_id" id="ingredient_id">
-                    <div class="mb-3">
-                        <label for="ingredient_name" class="form-label">Ingredient</label>
-                        <input type="text" class="form-control" id="ingredient_name" name="ingredient_name" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="replenish_quantity" class="form-label">Amount to Replenish</label>
-                        <input type="number" class="form-control" id="replenish_quantity" name="replenish_quantity" required>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Replenish</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- JavaScript for Modal Population -->
-<script>
-    const replenishButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
-    replenishButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const ingredientId = this.getAttribute('data-ingredient-id');
-            const ingredientName = this.getAttribute('data-ingredient-name');
-            document.getElementById('ingredient_id').value = ingredientId;
-            document.getElementById('ingredient_name').value = ingredientName;
-        });
-    });
-</script>
-
 {% endblock %}
+

@@ -2,6 +2,11 @@ from django.db import models
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
+from django.contrib.auth.models import User
+
 class Ingredient(models.Model):
     PRIORITIES = [
         (1, 'High'),
@@ -45,31 +50,13 @@ class OrderDetails(models.Model):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
 
-
-
-class SimpleUserManager(BaseUserManager):
-    def create_user(self, email, password=None, role='employee'):
-        if not email:
-            raise ValueError('Email is required')
-        user = self.model(email=self.normalize_email(email), role=role)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-class SimpleUser(AbstractBaseUser):
+class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('employee', 'Employee'),
     ]
-
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='employee')
-
-    objects = SimpleUserManager()
-
-    USERNAME_FIELD = 'email'
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
     def __str__(self):
-        return self.email
-
+        return f"{self.user.username} ({self.role})"

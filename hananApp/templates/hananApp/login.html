@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Hanan IMS</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #fdf9ef;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .login-logo img {
+      width: 200px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #333;
+      font-size: 16px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-wrapper input[type="text"],
+    .form-wrapper input[type="password"],
+    .form-wrapper button {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .form-wrapper input[type="text"],
+    .form-wrapper input[type="password"] {
+      border: 1px solid #999;
+      background-color: #ddc29e;
+      color: #333;
+    }
+
+    .form-wrapper button {
+      background-color: #1f5e37;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.2s ease;
+    }
+
+    .form-wrapper button:hover {
+      background-color: #174a2c;
+    }
+
+    .error {
+      color: red;
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-logo">
+    <img src="{% static 'hananApp/logo.png' %}" alt="Made Italian Logo" />
+  </div>
+
+  <p>Please enter your login credentials to begin managing your inventory.</p>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" class="form-wrapper">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="USERNAME" required />
+    <input type="password" name="password" placeholder="PASSWORD" required />
+    <button type="submit">LOGIN</button>
+  </form>
+</body>
+</html>
+
+

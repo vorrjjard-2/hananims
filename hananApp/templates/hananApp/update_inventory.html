@@ -15,16 +15,11 @@
     .inventory-header {
         background-color: #0c6533;
         color: white;
-        padding: 20px 30px 10px;
+        padding: 20px 30px 15px;
         font-size: 20px;
         font-weight: bold;
-    }
-
-    .inventory-subheader {
-        color: white;
-        font-size: 14px;
-        padding: 0 30px 10px;
-        margin-bottom: -1px;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
     }
 
     .inventory-table {
@@ -144,7 +139,6 @@
 
 <div class="inventory-box">
     <div class="inventory-header">Update Inventory</div>
-    <div class="inventory-subheader">Date: {{ now|date:"F d, Y, g:iA" }}</div>
 
     <form method="POST">
         {% csrf_token %}
@@ -161,9 +155,9 @@
             <tbody id="entry-body">
                 <tr>
                     <td>
-                        <select name="ingredient" class="rounded-select">
+                        <select name="ingredient" class="ingredient-select" onchange="updateUnit(this, 0)">
                             {% for ingredient in ingredients %}
-                                <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                                <option value="{{ ingredient.id }}" data-unit="{{ ingredient.unit }}">{{ ingredient.name }}</option>
                             {% endfor %}
                         </select>
                     </td>
@@ -178,14 +172,7 @@
                         <div class="amount-box">
                             <button type="button" onclick="adjustAmount(this, -1)">−</button>
                             <input type="number" name="amount-0" min="0" value="0" style="width: 60px;">
-                            <button type="button" onclick="adjustAmount(this, 1)">+</button>
-                            <select name="unit-0" style="border-radius: 10px;">
-                                <option value="g">g</option>
-                                <option value="kg">kg</option>
-                                <option value="ml">ml</option>
-                                <option value="l">l</option>
-                                <option value="pcs">pcs</option>
-                            </select>
+                            <input type="text" name="unit-0" class="unit-display" readonly value="{{ ingredients.0.unit }}">
                         </div>
                     </td>
                     <td>
@@ -223,16 +210,22 @@
         input.value = value;
     }
 
+    function updateUnit(select, index) {
+        const unit = select.options[select.selectedIndex].getAttribute('data-unit');
+        document.querySelector(`input[name="unit-${index}"]`).value = unit;
+    }
+
     function addEntry() {
         const tbody = document.getElementById("entry-body");
         const index = tbody.children.length;
         const clone = tbody.children[0].cloneNode(true);
 
-        // Update names and clear values
-        clone.querySelector('select[name="ingredient"]').selectedIndex = 0;
+        clone.querySelector('select[name="ingredient"]').setAttribute('onchange', `updateUnit(this, ${index})`);
+        clone.querySelector('select[name="ingredient"]').name = `ingredient`;
         clone.querySelector('input[name^="amount"]').name = `amount-${index}`;
         clone.querySelector('input[name^="amount"]').value = 0;
-        clone.querySelector('select[name^="unit"]').name = `unit-${index}`;
+        clone.querySelector('input[name^="unit"]').name = `unit-${index}`;
+        clone.querySelector('input[name^="unit"]').value = "";
         clone.querySelector('input[name^="cost"]').name = `cost-${index}`;
         clone.querySelector('input[name^="cost"]').value = "000.00";
         clone.querySelector('input[type="hidden"]').name = `action-${index}`;
@@ -243,7 +236,6 @@
             btn.setAttribute("onclick", `toggleAction(this, '${i === 0 ? 'add' : 'reduce'}')`);
         });
 
-        // Update Remove button if missing
         clone.querySelector('td:last-child').innerHTML = `<button type="button" class="btn btn-danger btn-sm" onclick="removeEntry(this)">Remove</button>`;
 
         tbody.appendChild(clone);
@@ -260,3 +252,4 @@
     }
 </script>
 {% endblock %}
+

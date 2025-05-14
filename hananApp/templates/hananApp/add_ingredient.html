@@ -4,169 +4,130 @@
 
 {% block content %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    body {
-        font-family: 'Inter', sans-serif;
+    .ingredient-box {
+        background-color: #fdf9f0;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
     }
 
-    .card {
-        background-color: #ffffff;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    .ingredient-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px 15px;
+        font-size: 20px;
+        font-weight: bold;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .ingredient-body {
+        padding: 30px;
+    }
+
+    .ingredient-body label {
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .ingredient-body input[type="text"],
+    .ingredient-body input[type="number"],
+    .ingredient-body select {
+        background-color: #e4caa7;
         border: none;
-        font-family: 'Inter', sans-serif;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 15px;
+        width: 100%;
+        color: #000;
     }
 
-    h3 {
-        font-weight: 600;
-        color: #1b5e20;
-    }
-
-    label.form-label {
-        font-weight: 500;
+    .ingredient-body select:invalid {
         color: #333;
     }
 
-    input.form-control,
-    select.form-select {
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        font-size: 15px;
-        padding: 10px;
-        font-family: 'Inter', sans-serif;
+    .ingredient-body ::placeholder {
+        color: #333;
     }
 
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #1b5e20;
-        box-shadow: 0 0 0 0.2rem rgba(27, 94, 32, 0.25);
+    .form-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
     }
 
-    .btn-primary {
-        background-color: #1b5e20;
-        border-color: #1b5e20;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    .btn-primary:hover {
-        background-color: #145a1e;
-        border-color: #145a1e;
+    .btn-success {
+        background-color: #3caa37;
+        color: white;
+        padding: 10px 24px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        border: none;
     }
 
     .btn-secondary {
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    .mb-3 label {
-        margin-bottom: 6px;
-        display: inline-block;
-    }
-
-    .d-flex {
-        gap: 10px;
+        background-color: #888;
+        color: white;
+        padding: 10px 24px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        border: none;
     }
 </style>
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card p-4">
-            <h3 class="fw-bold mb-3">Add New Ingredient</h3>
-            <form method="POST" novalidate>
-                {% csrf_token %}
-                
-                <!-- Ingredient Name -->
-                <div class="mb-3">
-                    <label for="ingredientName" class="form-label">Ingredient Name</label>
-                    <input 
-                        type="text" 
-                        class="form-control" 
-                        id="ingredientName" 
-                        name="name" 
-                        placeholder="Enter ingredient name" 
-                        value="{{ form_data.name }}" 
-                        required>
-                </div>
+<div class="ingredient-box">
+    <div class="ingredient-header">Add New Ingredient</div>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="ingredient-body">
+            <div class="mb-3">
+                <label for="ingredientName">Ingredient Name</label>
+                <input type="text" id="ingredientName" name="name" value="{{ form_data.name }}" required>
+            </div>
 
-                <!-- Quantity -->
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input 
-                        type="number" 
-                        class="form-control" 
-                        id="quantity" 
-                        name="quantity" 
-                        placeholder="Enter quantity" 
-                        step="0.01" 
-                        value="{{ form_data.quantity }}" 
-                        required>
-                </div>
+            <div class="mb-3">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" step="0.01" value="{{ form_data.quantity }}" required>
+            </div>
 
-                <!-- Minimum Threshold -->
-                <div class="mb-3">
-                    <label for="minThreshold" class="form-label">Minimum Threshold</label>
-                    <input 
-                        type="number" 
-                        class="form-control" 
-                        id="minThreshold" 
-                        name="minThreshold" 
-                        placeholder="Enter minimum threshold" 
-                        step="0.01" 
-                        value="{{ form_data.minThreshold }}" 
-                        required>
-                </div>
+            <div class="mb-3">
+                <label for="minThreshold">Minimum Threshold</label>
+                <input type="number" id="minThreshold" name="minThreshold" step="0.01" value="{{ form_data.minThreshold }}" required>
+            </div>
 
-                <!-- Unit -->
-                <div class="mb-3">
-                    <label for="unit" class="form-label">Unit</label>
-                    <select 
-                        class="form-select" 
-                        id="unit" 
-                        name="unit" 
-                        required>
-                        <option value="" disabled selected>Select unit</option>
-                        <option value="g" {% if form_data.unit == 'g' %}selected{% endif %}>Grams</option>
-                        <option value="pcs" {% if form_data.unit == 'pcs' %}selected{% endif %}>Pieces</option>
-                    </select>
-                </div>
+            <div class="mb-3">
+                <label for="unit">Unit</label>
+                <select id="unit" name="unit" required>
+                    <option value="" disabled selected>Select unit</option>
+                    <option value="g" {% if form_data.unit == 'g' %}selected{% endif %}>Grams</option>
+                    <option value="pcs" {% if form_data.unit == 'pcs' %}selected{% endif %}>Pieces</option>
+                </select>
+            </div>
 
-                <div class="mb-3">
-                    <label for="price_per_unit" class="form-label">Price Per Unit</label>
-                    <input 
-                        type="number" 
-                        class="form-control" 
-                        id="price_per_unit" 
-                        name="price_per_unit" 
-                        placeholder="Enter price per unit" 
-                        value="{{ form_data.price_per_unit }}" 
-                        required>
-                </div>
+            <div class="mb-3">
+                <label for="price_per_unit">Price Per Unit</label>
+                <input type="number" id="price_per_unit" name="price_per_unit" value="{{ form_data.price_per_unit }}" required>
+            </div>
 
-                <!-- Priority -->
-                <div class="mb-3">
-                    <label for="priority" class="form-label">Priority</label>
-                    <select 
-                        class="form-select" 
-                        id="priority" 
-                        name="priority" 
-                        required>
-                        <option value="" disabled selected>Select priority</option>
-                        <option value="1" {% if form_data.priority == '1' %}selected{% endif %}>1</option>
-                        <option value="2" {% if form_data.priority == '2' %}selected{% endif %}>2</option>
-                        <option value="3" {% if form_data.priority == '3' %}selected{% endif %}>3</option>
-                    </select>
-                </div>
+            <div class="mb-3">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority" required>
+                    <option value="" disabled selected>Select priority</option>
+                    <option value="1" {% if form_data.priority == '1' %}selected{% endif %}>1</option>
+                    <option value="2" {% if form_data.priority == '2' %}selected{% endif %}>2</option>
+                    <option value="3" {% if form_data.priority == '3' %}selected{% endif %}>3</option>
+                </select>
+            </div>
 
-                <!-- Submit and Cancel Buttons -->
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="/" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Add Ingredient</button>
-                </div>
-            </form>
+            <div class="form-buttons">
+                <a href="/" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success">Add Ingredient</button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
+

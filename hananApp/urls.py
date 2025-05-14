@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from . import views
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.dashboard, name="dashboard"),
+    path('', views.login_view, name="login_view"),
+    path('dashboard/', views.dashboard, name="dashboard"),
     path('replenish-ingredient/', views.replenish_ingredient, name='replenish_ingredient'),
     path('dishes', views.dishes, name='dishes'),
     path('orders', views.orders, name='orders'),
@@ -32,4 +34,5 @@ urlpatterns = [
     path('generate_report', views.generate_report, name="generate_report"),
     path('report', views.report, name="report"),
     path('edit_dish/<int:dish_id>/', views.edit_dish, name='edit_dish'),
+    path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
 ]

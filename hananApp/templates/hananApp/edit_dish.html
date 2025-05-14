@@ -4,113 +4,198 @@
 
 {% block content %}
 <style>
-    .container {
-        max-width: 900px;
+    .dish-box {
+        background-color: #fdf9f0;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
     }
 
-    .ingredient-select {
+    .dish-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px 15px;
+        font-size: 20px;
+        font-weight: bold;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .dish-body {
+        padding: 30px;
+    }
+
+    .dish-body label {
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .dish-body input[type="text"],
+    .dish-body input[type="number"],
+    .dish-body select {
+        background-color: #e4caa7;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 15px;
         width: 100%;
     }
 
+    table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 12px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #c3d6b1;
+    }
+
+    td {
+        background-color: #fdf9f0;
+    }
+
+    .form-buttons {
+        margin-top: 30px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-success {
+        background-color: #3caa37;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
     .btn-primary {
-        background-color: #239D13;
-        border-color: #239D13;
+        background-color: #1e7a2e;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .btn-success:hover {
+        background-color: #32912f;
     }
 
     .btn-primary:hover {
-        background-color: #1c7c0e;  /* Slightly darker green on hover */
-        border-color: #1c7c0e;
+        background-color: #196528;
     }
 
-    .btn-primary:focus, .btn-primary:active {
-        box-shadow: 0 0 0 0.25rem rgba(35, 157, 19, 0.5);  /* Slight green shadow on focus/active */
+    .btn-danger {
+        background-color: #f26957;
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: bold;
     }
 
+    .btn-danger:hover {
+        background-color: #d95b4a;
+    }
 </style>
 
-<div class="container">
-    <h1 class="my-4">Edit Dish: {{ dish.name }}</h1>
-
-    <form method="POST" id="edit-dish-form">
+<div class="dish-box">
+    <div class="dish-header">Edit Dish: {{ dish.name }}</div>
+    <form method="POST">
         {% csrf_token %}
-        
-        <!-- Dish Name -->
-        <div class="mb-3">
-            <label for="name" class="form-label">Dish Name:</label>
-            <input type="text" id="name" name="name" class="form-control" value="{{ dish.name }}" required>
+        <div class="dish-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="name">Dish Name:</label>
+                    <input type="text" name="name" value="{{ dish.name }}" required />
+                </div>
+                <div class="col-md-6">
+                    <label for="price">Dish Price (PHP):</label>
+                    <input type="number" name="price" step="0.01" min="0" value="{{ dish.price }}" required />
+                </div>
+            </div>
+
+            <h5 style="font-weight: bold;">Ingredients</h5>
+
+            <table id="ingredients-table">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recipe in dish.recipedetails_set.all %}
+                    <tr>
+                        <td>
+                            <select name="ingredient_{{ forloop.counter }}" required>
+                                {% for ingredient in ingredients %}
+                                    <option value="{{ ingredient.id }}" {% if recipe.ingredient.id == ingredient.id %}selected{% endif %}>
+                                        {{ ingredient.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="quantity_{{ forloop.counter }}" value="{{ recipe.quantity_used }}" min="1" required />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger remove-row">Remove</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="form-buttons">
+                <button type="button" class="btn btn-success" id="add-ingredient-row">+ Add Ingredient</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="price" class="form-label">Dish Price (PHP):</label>
-            <input type="number" id="price" name="price" class="form-control" value="{{ dish.price }}" step="0.01" min="0" required>
-        </div>
-
-        <h2 class="my-4">Ingredients</h2>
-
-        <table id="ingredients-table" class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Ingredient</th>
-                    <th>Quantity</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for recipe in dish.recipedetails_set.all %}
-                <tr>
-                    <td>
-                        <select class="ingredient-select form-control" name="ingredient_{{ forloop.counter }}" required>
-                            {% for ingredient in ingredients %}
-                                <option value="{{ ingredient.id }}" {% if recipe.ingredient.id == ingredient.id %}selected{% endif %}>{{ ingredient.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" name="quantity_{{ forloop.counter }}" class="form-control" value="{{ recipe.quantity_used }}" min="1" required>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger remove-row">Remove</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <button type="button" class="btn btn-success" id="add-ingredient-row">Add Ingredient</button>
-
-        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
     </form>
 </div>
 
 <script>
-    // Add new row for ingredients
     document.getElementById('add-ingredient-row').addEventListener('click', function () {
         const tbody = document.querySelector('#ingredients-table tbody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
+        const rowIndex = tbody.children.length + 1;
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
             <td>
-                <select class="ingredient-select form-control" name="ingredient_${tbody.children.length + 1}" required>
+                <select name="ingredient_${rowIndex}" required>
                     {% for ingredient in ingredients %}
                         <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
                     {% endfor %}
                 </select>
             </td>
             <td>
-                <input type="number" name="quantity_${tbody.children.length + 1}" class="form-control" min="1" required>
+                <input type="number" name="quantity_${rowIndex}" min="1" required />
             </td>
             <td>
                 <button type="button" class="btn btn-danger remove-row">Remove</button>
             </td>
         `;
-        tbody.appendChild(row);
+        tbody.appendChild(newRow);
     });
 
-    // Remove ingredient row
     document.addEventListener('click', function (e) {
-        if (e.target && e.target.classList.contains('remove-row')) {
-            e.target.closest('tr').remove();
+        if (e.target.classList.contains('remove-row')) {
+            const row = e.target.closest('tr');
+            row.remove();
         }
     });
 </script>
-
 {% endblock %}
+

@@ -66,7 +66,19 @@
                 {% endfor %}
             </tbody>
         </table>
-        <button type="submit" class="submit-button">Submit</button>
+        <div style="margin-top: 20px;">
+            <button type="submit" class="submit-button">Submit</button>
+            <a href="{% url 'dashboard' %}" style="
+                margin-left: 10px;
+                padding: 10px 20px;
+                background-color: #f26957;
+                color: white;
+                text-decoration: none;
+                font-size: 16px;
+                border-radius: 4px;
+            ">Cancel</a>
+        </div>
+        
     </form>
     <script>
         function toggleQuantity(checkbox, quantityFieldId) {

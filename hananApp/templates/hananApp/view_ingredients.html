@@ -3,40 +3,81 @@
 {% block title %}List of Ingredients - Hanan IMS{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card p-4" style="background-color: white;">
-            <h3 class="fw-bold mb-3" style="color: #3c6e47;">List of Ingredients</h3>
-            
-            {% if ingredients %}
-                <table class="table table-striped" style="color: white; background-color: #4e7c4e;">
-                    <thead style="background-color: #3c6e47;">
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Quantity</th>
-                            <th>Minimum Threshold</th>
-                            <th>Unit</th>
-                            <th>Priority</th>
-                        </tr>
-                    </thead>
-                    <tbody style="background-color: #4e7c4e;">
-                        {% for ingredient in ingredients %}
-                            <tr>
-                                <td>{{ ingredient.id }}</td>
-                                <td>{{ ingredient.name }}</td>
-                                <td>{{ ingredient.quantity }}</td>
-                                <td>{{ ingredient.min_threshold }}</td>
-                                <td>{{ ingredient.unit }}</td>
-                                <td>{{ ingredient.priority }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>No ingredients available.</p>
-            {% endif %}
-        </div>
-    </div>
+<style>
+    .table-wrapper {
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .table-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px 15px;
+        font-size: 20px;
+        font-weight: bold;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .ingredients-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fdf7ed;
+    }
+
+    .ingredients-table th, .ingredients-table td {
+        border: 1px solid #bbb;
+        padding: 12px 15px;
+        font-size: 15px;
+        text-align: left;
+    }
+
+    .ingredients-table th {
+        background-color: #c3d6b1;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .ingredients-table td {
+        text-align: center;
+    }
+</style>
+
+<div class="table-wrapper">
+    <div class="table-header">List of Ingredients</div>
+
+    {% if ingredients %}
+        <table class="ingredients-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">#</th>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Minimum Threshold</th>
+                    <th>Unit</th>
+                    <th>Priority</th>
+                    <th>Cost per Unit (PHP)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ingredient in ingredients %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ ingredient.name }}</td>
+                        <td>{{ ingredient.quantity }}</td>
+                        <td>{{ ingredient.min_threshold }}</td>
+                        <td>{{ ingredient.unit }}</td>
+                        <td>{{ ingredient.get_priority_display }}</td>
+                        <td>{{ ingredient.price_per_unit|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="p-3">No ingredients available.</div>
+    {% endif %}
 </div>
 {% endblock %}
