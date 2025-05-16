@@ -586,7 +586,9 @@ from django.http import JsonResponse
 
 def edit_dish(request, dish_id):
     logger.info("Entered view: edit_dish")
+    
     if request.user.userprofile.role != 'admin':
+        logger.warning(f"Unauthorized access attempt by user {request.user.username}")
         return HttpResponse("""
             <html>
                 <head>
@@ -598,38 +600,59 @@ def edit_dish(request, dish_id):
                 </body>
             </html>
         """)
+
     dish = get_object_or_404(Dish, id=dish_id)
     ingredients = Ingredient.objects.all()
 
     if request.method == 'POST':
-        # Get the dish name and price from the form
         dish_name = request.POST.get('name')
         dish_price = request.POST.get('price')
 
-        # Update the dish object
         dish.name = dish_name
         dish.price = dish_price
         dish.save()
+        logger.info(f"Updated dish '{dish.name}' with new price {dish_price}")
 
-        # Update ingredients
-        for i in range(1, len(request.POST) // 2 + 1):  # assuming every ingredient has a quantity
+        existing_details = RecipeDetails.objects.filter(dish=dish)
+        existing_ingredient_ids = set(existing_details.values_list('ingredient_id', flat=True))
+
+        posted_ingredient_ids = set()
+        updated_pairs = set()
+
+        i = 1
+        while True:
             ingredient_id = request.POST.get(f'ingredient_{i}')
             quantity = request.POST.get(f'quantity_{i}')
+            if not ingredient_id or not quantity:
+                break
+            ingredient_id = int(ingredient_id)
+            quantity = float(quantity)
 
-            # Find or create a RecipeDetails entry
-            if ingredient_id and quantity:
-                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-                recipe_detail = RecipeDetails.objects.filter(dish=dish, ingredient=ingredient).first()
+            posted_ingredient_ids.add(ingredient_id)
+            updated_pairs.add((ingredient_id, quantity))
 
-                if recipe_detail:
-                    # Update existing recipe detail
-                    recipe_detail.quantity_used = quantity
-                    recipe_detail.save()
-                else:
-                    # Add new recipe detail
-                    RecipeDetails.objects.create(dish=dish, ingredient=ingredient, quantity_used=quantity)
+            recipe_detail = RecipeDetails.objects.filter(dish=dish, ingredient_id=ingredient_id).first()
+            if recipe_detail:
+                recipe_detail.quantity_used = quantity
+                recipe_detail.save()
+                logger.info(f"Updated RecipeDetails: {ingredient_id} -> {quantity}")
+            else:
+                RecipeDetails.objects.create(dish=dish, ingredient_id=ingredient_id, quantity_used=quantity)
+                logger.info(f"Created new RecipeDetails: {ingredient_id} -> {quantity}")
+
+            i += 1
+
+        # Delete removed ingredients
+        to_delete = existing_details.exclude(ingredient_id__in=posted_ingredient_ids)
+        deleted_ids = list(to_delete.values_list('ingredient_id', flat=True))
+        to_delete.delete()
+        if deleted_ids:
+            logger.info(f"Deleted RecipeDetails for removed ingredients: {deleted_ids}")
 
         messages.success(request, "Dish updated successfully!")
-        return redirect('dishes')  # Redirect back to the dishes list
+        return redirect('dishes')
 
-    return render(request, 'hananApp/edit_dish.html', {'dish': dish, 'ingredients': ingredients})
+    return render(request, 'hananApp/edit_dish.html', {
+        'dish': dish,
+        'ingredients': ingredients
+    })
