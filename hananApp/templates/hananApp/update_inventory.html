@@ -91,6 +91,14 @@
         cursor: pointer;
     }
 
+    .quantity-input {
+        width: 100px;
+    }
+
+    .unit-display {
+        width: 60px;
+    }
+
     .pill-input {
         background-color: #e4caa7;
         border: none;
@@ -171,7 +179,7 @@
                     <td>
                         <div class="amount-box">
                             <button type="button" onclick="adjustAmount(this, -1)">−</button>
-                            <input type="number" name="amount-0" min="0" value="0" style="width: 60px;">
+                            <input type="number" name="amount-0" class="quantity-input" min="0" value="0">
                             <input type="text" name="unit-0" class="unit-display" readonly value="{{ ingredients.0.unit }}">
                         </div>
                     </td>
@@ -224,8 +232,10 @@
         clone.querySelector('select[name="ingredient"]').name = `ingredient`;
         clone.querySelector('input[name^="amount"]').name = `amount-${index}`;
         clone.querySelector('input[name^="amount"]').value = 0;
+        clone.querySelector('input[name^="amount"]').className = 'quantity-input';
         clone.querySelector('input[name^="unit"]').name = `unit-${index}`;
         clone.querySelector('input[name^="unit"]').value = "";
+        clone.querySelector('input[name^="unit"]').className = 'unit-display';
         clone.querySelector('input[name^="cost"]').name = `cost-${index}`;
         clone.querySelector('input[name^="cost"]').value = "000.00";
         clone.querySelector('input[type="hidden"]').name = `action-${index}`;
@@ -252,4 +262,3 @@
     }
 </script>
 {% endblock %}
-

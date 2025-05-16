@@ -411,9 +411,20 @@ def dishes(request):
 
     return render(request, 'hananApp/dishes.html', context)
 
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from .models import Ingredient
+from django.utils import timezone
+from django.contrib import messages
+import logging
+
+logger = logging.getLogger(__name__)
+
 def update_inventory(request):
     logger.info("Entered view: update_inventory")
+
     if request.user.userprofile.role != 'admin':
+        logger.warning(f"Unauthorized access attempt by {request.user.username}")
         return HttpResponse("""
             <html>
                 <head>
@@ -428,23 +439,31 @@ def update_inventory(request):
 
     if request.method == 'POST':
         total_entries = len([key for key in request.POST if key.startswith('amount-')])
-        
+        has_error = False
+
         for i in range(total_entries):
             try:
-                ingredient_id = request.POST.get('ingredient')
+                ingredient_id = request.POST.getlist('ingredient')[i]
                 action = request.POST.get(f'action-{i}')
-                amount = float(request.POST.get(f'amount-{i}'))
+                amount = float(request.POST.get(f'amount-{i}', 0))
                 unit = request.POST.get(f'unit-{i}')
-                cost = float(request.POST.get(f'cost-{i}'))
+                cost = float(request.POST.get(f'cost-{i}', 0.0))
 
                 ingredient = Ingredient.objects.get(pk=ingredient_id)
 
-                # Check unit match
                 if unit != ingredient.unit:
-                    continue  # skip if mismatched
+                    logger.warning(f"Unit mismatch for ingredient {ingredient.name}. Skipping.")
+                    messages.warning(request, f"Unit mismatch for {ingredient.name}. Entry skipped.")
+                    has_error = True
+                    continue
+
+                if cost <= 0 and action == 'add':
+                    logger.warning(f"Invalid cost {cost} for {ingredient.name}. Try again.")
+                    messages.warning(request, f"Cost must be greater than 0 when adding {ingredient.name}. Please try again.")
+                    has_error = True
+                    continue
 
                 if action == 'add':
-                    # Weighted average cost update
                     existing_total_cost = ingredient.quantity * ingredient.price_per_unit
                     new_total_cost = cost
                     new_total_quantity = ingredient.quantity + amount
@@ -454,16 +473,30 @@ def update_inventory(request):
                         ingredient.price_per_unit = new_price_per_unit
 
                     ingredient.quantity += amount
+                    logger.info(f"Added {amount} to {ingredient.name}. New quantity: {ingredient.quantity:.2f}")
 
                 elif action == 'reduce':
-                    ingredient.quantity = max(0, ingredient.quantity - amount)
+                    if amount > ingredient.quantity:
+                        logger.warning(f"Tried to deduct {amount} from {ingredient.name}, but only {ingredient.quantity:.2f} available.")
+                        messages.warning(request, f"Cannot reduce {amount} from {ingredient.name} (only {ingredient.quantity:.2f} available). Entry skipped.")
+                        has_error = True
+                        continue
+
+                    ingredient.quantity -= amount
+                    logger.info(f"Reduced {amount} from {ingredient.name}. Remaining: {ingredient.quantity:.2f}")
 
                 ingredient.save()
 
             except Exception as e:
-                print(f"Error processing entry {i}: {e}")
+                logger.error(f"Error processing entry {i}: {e}")
+                messages.error(request, f"An error occurred while processing entry {i + 1}.")
+                has_error = True
                 continue
 
+        if has_error:
+            return redirect('update_inventory')
+
+        messages.success(request, "Inventory updated successfully!")
         return redirect('dashboard')
 
     ingredients = Ingredient.objects.all()
@@ -472,6 +505,7 @@ def update_inventory(request):
         'now': timezone.now()
     }
     return render(request, 'hananApp/update_inventory.html', context)
+
 
 from django.urls import reverse
 

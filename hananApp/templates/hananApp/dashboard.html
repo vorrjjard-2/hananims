@@ -144,7 +144,7 @@
                     <td>{{ ingredient.min_threshold }}</td>
                     <td>{{ ingredient.shortage|floatformat:4 }}</td>
                     <td>
-                        <span class="badge {% if ingredient.priority == 3 %}bg-danger
+                        <span class="badge {% if ingredient.priority == 1 %}bg-danger
                                             {% elif ingredient.priority == 2 %}bg-warning text-dark
                                             {% else %}bg-success{% endif %}">
                             {{ ingredient.get_priority_display }}
