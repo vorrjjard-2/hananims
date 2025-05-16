@@ -166,6 +166,7 @@
                        class="see-more-link"
                        data-name="{{ dish.name }}"
                        data-price="{{ dish.price }}"
+                       data-cost="{{ dish.estimated_cost }}"
                        data-ingredients='[
                            {% for rd in dish.recipedetails_set.all %}
                                {"name": "{{ rd.ingredient.name }}", "quantity": "{{ rd.quantity_used }}", "unit": "{{ rd.ingredient.get_unit_display }}"}
@@ -201,6 +202,7 @@
             e.preventDefault();
             const dishName = this.dataset.name;
             const price = this.dataset.price;
+            const cost = this.dataset.cost;
             const ingredients = JSON.parse(this.dataset.ingredients);
 
             let ingredientsHTML = `<ul>`;
@@ -219,7 +221,7 @@
                     </div>
                     <div class="popup-right">
                         <strong>SELLING PRICE:</strong> PHP ${price}<br>
-                        <strong>ESTIMATED COST:</strong> PHP —
+                        <strong>ESTIMATED COST:</strong> PHP ${cost}
                     </div>
                 </div>
                 <div class="popup-footer">

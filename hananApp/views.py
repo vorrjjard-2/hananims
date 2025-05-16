@@ -381,10 +381,18 @@ def view_ingredients(request):
     return render(request, 'hananApp/view_ingredients.html', {'ingredients':ingredients})
 
 def dishes(request):
-    # Fetch all dishes along with their related ingredients
+    # Fetch all dishes and their related ingredients in one query for efficiency
     dishes = Dish.objects.prefetch_related('recipedetails_set__ingredient')
+
+    # Dynamically calculate estimated cost for each dish
+    for dish in dishes:
+        total_cost = 0.0
+        for rd in dish.recipedetails_set.all():
+            total_cost += rd.quantity_used * rd.ingredient.price_per_unit 
+        dish.estimated_cost = round(total_cost, 2)  # Attach as a temporary attribute
+
     context = {
-        'dishes':dishes
+        'dishes': dishes
     }
 
     return render(request, 'hananApp/dishes.html', context)
