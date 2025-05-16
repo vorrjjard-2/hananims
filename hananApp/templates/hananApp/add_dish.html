@@ -3,6 +3,11 @@
 {% block title %}Add Dish - Hanan IMS{% endblock %}
 
 {% block content %}
+<!-- Include Select2 styles and JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <style>
     .dish-box {
         background-color: #fdf9f0;
@@ -93,6 +98,23 @@
         background-color: #3caa37;
         color: white;
     }
+
+    .select2-container--default .select2-selection--single {
+        border-radius: 10px;
+        border: none;
+        background-color: #e4caa7;
+        height: 42px;
+        padding: 5px;
+        font-size: 15px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 30px;
+    }
+
+    .select2-dropdown {
+        border-radius: 0 0 10px 10px;
+    }
 </style>
 
 <div class="dish-box">
@@ -121,20 +143,24 @@
                     <tr>
                         <th>Ingredient</th>
                         <th>Quantity</th>
+                        <th>Unit</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>
-                            <select name="ingredient_1" required>
+                            <select name="ingredient_1" class="ingredient-select" required onchange="updateUnit(this)">
                                 {% for ingredient in ingredients %}
-                                    <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                                    <option value="{{ ingredient.id }}" data-unit="{{ ingredient.unit }}">{{ ingredient.name }}</option>
                                 {% endfor %}
                             </select>
                         </td>
                         <td>
                             <input type="number" name="quantity_1" min="1" required />
+                        </td>
+                        <td class="unit-cell">
+                            {{ ingredients.0.unit }}
                         </td>
                         <td>
                             <button type="button" class="btn btn-success add-row">+ Add</button>
@@ -153,25 +179,32 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         let rowIndex = 2;
+
+        $('.ingredient-select').select2();
+
         document.querySelector('.add-row').addEventListener('click', function () {
             const table = document.querySelector('#ingredients-table tbody');
             const newRow = document.createElement('tr');
+            const optionsHtml = `{% for ingredient in ingredients %}<option value="{{ ingredient.id }}" data-unit="{{ ingredient.unit }}">{{ ingredient.name }}</option>{% endfor %}`;
+            const defaultUnit = `{% if ingredients %}{{ ingredients.0.unit }}{% else %}unit{% endif %}`;
+
             newRow.innerHTML = `
                 <td>
-                    <select name="ingredient_${rowIndex}" required>
-                        {% for ingredient in ingredients %}
-                            <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
-                        {% endfor %}
+                    <select name="ingredient_${rowIndex}" class="ingredient-select" required onchange="updateUnit(this)">
+                        ${optionsHtml}
                     </select>
                 </td>
                 <td>
                     <input type="number" name="quantity_${rowIndex}" min="1" required />
                 </td>
+                <td class="unit-cell">${defaultUnit}</td>
                 <td>
                     <button type="button" class="btn btn-danger remove-row">Remove</button>
                 </td>
             `;
             table.appendChild(newRow);
+
+            $(`select[name="ingredient_${rowIndex}"]`).select2();
             rowIndex++;
         });
 
@@ -182,12 +215,12 @@
             }
         });
     });
+
+    function updateUnit(selectElement) {
+        const unit = selectElement.options[selectElement.selectedIndex].getAttribute('data-unit');
+        const row = selectElement.closest('tr');
+        const unitCell = row.querySelector('.unit-cell');
+        unitCell.textContent = unit || '';
+    }
 </script>
 {% endblock %}
-
-
-
-
-
-
-

@@ -1,5 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 from django.db import transaction
 from .models import Ingredient, Dish, RecipeDetails, Order, OrderDetails
 from django.db.models import F, FloatField, ExpressionWrapper
@@ -26,6 +30,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 
 def login_view(request):
+    logger.info("Entered view: login_view")
     error = ""
     
     if request.method == "POST":
@@ -48,6 +53,7 @@ def login_view(request):
     return render(request, 'hananApp/login.html', {"error": error})
 
 def dashboard(request):
+    logger.info("Entered view: dashboard")
     # Fetch low-stock ingredients and calculate shortages
     ingredients = Ingredient.objects.annotate(
         shortage=ExpressionWrapper(
@@ -116,6 +122,7 @@ def dashboard(request):
     return render(request, "hananApp/dashboard.html", context)
 
 def replenish_ingredient(request):
+    logger.info("Entered view: replenish_ingredient")
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
             <html>
@@ -156,6 +163,7 @@ def replenish_ingredient(request):
     return redirect('dashboard')
 
 def orders(request):
+    logger.info("Entered view: orders")
     orders = Order.objects.prefetch_related('orderdetails_set__dish').order_by('-date')
 
     today = timezone.now().date()
@@ -180,6 +188,7 @@ from django.core.exceptions import ValidationError
 from .models import Dish, Order, OrderDetails, Ingredient, RecipeDetails
 
 def add_order(request):
+    logger.info("Entered view: add_order")
     if request.method == 'POST':
         try:
             with transaction.atomic():
@@ -234,6 +243,7 @@ def add_order(request):
 
 
 def delete_dish(request, dish_id):
+    logger.info("Entered view: delete_dish")
     if request.user.userprofile.role != 'admin':
         messages.error(request, "You are not authorized to delete dishes.")
         return redirect('dishes')
@@ -244,6 +254,7 @@ def delete_dish(request, dish_id):
     return redirect('dishes')
 
 def add_dish(request):
+    logger.info("Entered view: add_dish")
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
             <html>
@@ -295,6 +306,7 @@ def add_dish(request):
     return render(request, "hananApp/add_dish.html", {"ingredients": ingredients})
 
 def add_ingredient(request):
+    logger.info("Entered view: add_ingredient")
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
             <html>
@@ -377,10 +389,12 @@ def add_ingredient(request):
     return render(request, 'hananApp/add_ingredient.html')
 
 def view_ingredients(request):
+    logger.info("Entered view: view_ingredients")
     ingredients = Ingredient.objects.all()
     return render(request, 'hananApp/view_ingredients.html', {'ingredients':ingredients})
 
 def dishes(request):
+    logger.info("Entered view: dishes")
     # Fetch all dishes and their related ingredients in one query for efficiency
     dishes = Dish.objects.prefetch_related('recipedetails_set__ingredient')
 
@@ -398,6 +412,7 @@ def dishes(request):
     return render(request, 'hananApp/dishes.html', context)
 
 def update_inventory(request):
+    logger.info("Entered view: update_inventory")
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
             <html>
@@ -461,6 +476,7 @@ def update_inventory(request):
 from django.urls import reverse
 
 def generate_report(request):
+    logger.info("Entered view: generate_report")
     report_items = []
 
     if request.method == "POST":
@@ -490,6 +506,7 @@ from django.utils import timezone
 from datetime import datetime
 
 def report(request):
+    logger.info("Entered view: report")
     # Get the parameters from the URL
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -568,6 +585,7 @@ from .models import Dish, RecipeDetails, Ingredient
 from django.http import JsonResponse
 
 def edit_dish(request, dish_id):
+    logger.info("Entered view: edit_dish")
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
             <html>
