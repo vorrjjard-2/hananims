@@ -114,7 +114,6 @@
                 <th>Current Stock</th>
                 <th>Stock Requirement</th>
                 <th>Status</th>
-                <th>Last Restock</th>
             </tr>
         </thead>
         <tbody>
@@ -127,7 +126,6 @@
                 <td class="{% if ingredient.status == 'Low stock' %}low-stock{% elif ingredient.status == 'In stock' %}in-stock{% else %}out-of-stock{% endif %}">
                     {{ ingredient.status }}
                 </td>
-                <td>10/08/2024</td>
             </tr>
             {% endfor %}
         </tbody>
