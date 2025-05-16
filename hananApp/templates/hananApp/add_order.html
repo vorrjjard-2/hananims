@@ -1,59 +1,111 @@
 {% extends 'hananApp/base.html' %}
 
-{% block title %}Dashboard - Hanan IMS{% endblock %}
+{% block title %}Add New Order - Hanan IMS{% endblock %}
 
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Order</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .submit-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .submit-button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <h1>Add New Order</h1>
-    {% if error %}
-    <div style="color: red; margin-bottom: 20px;">
-        {{ error }}
-    </div>
-{% endif %}
-    <form method="POST">
-        {% csrf_token %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Dish Name</th>
-                    <th>Order?</th>
-                    <th>Quantity</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for dish in dishes %}
+<style>
+    .order-wrapper {
+        background-color: #fdf7ed;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .order-header {
+        background-color: #0c6533;
+        color: white;
+        padding: 20px 30px;
+        font-size: 20px;
+        font-weight: bold;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .order-body {
+        padding: 30px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fdf7ed;
+    }
+
+    th, td {
+        border: 1px solid #d0b893;
+        padding: 12px;
+        text-align: left;
+        font-size: 15px;
+    }
+
+    th {
+        background-color: #e6ccaa;
+    }
+
+    input[type="number"] {
+        width: 60px;
+        padding: 6px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    .form-buttons {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .btn-submit {
+        background-color: #3caa37;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f26957;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .error-message {
+        color: red;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="order-wrapper">
+    <div class="order-header">Add New Order</div>
+    <div class="order-body">
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST">
+            {% csrf_token %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dish Name</th>
+                        <th>Order?</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dish in dishes %}
                     <tr>
                         <td>{{ dish.name }}</td>
                         <td>
@@ -63,34 +115,31 @@
                             <input type="number" name="dish_{{ dish.id }}" id="quantity_{{ dish.id }}" min="1" value="0" disabled>
                         </td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div style="margin-top: 20px;">
-            <button type="submit" class="submit-button">Submit</button>
-            <a href="{% url 'dashboard' %}" style="
-                margin-left: 10px;
-                padding: 10px 20px;
-                background-color: #f26957;
-                color: white;
-                text-decoration: none;
-                font-size: 16px;
-                border-radius: 4px;
-            ">Cancel</a>
-        </div>
-        
-    </form>
-    <script>
-        function toggleQuantity(checkbox, quantityFieldId) {
-            const quantityField = document.getElementById(quantityFieldId);
-            if (checkbox.checked) {
-                quantityField.disabled = false;
-                quantityField.value = 1; // Set default value to 1
-            } else {
-                quantityField.disabled = true;
-                quantityField.value = 0; // Reset to 0
-            }
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="form-buttons">
+                <a href="{% url 'dashboard' %}" class="btn btn-cancel">Cancel</a>
+                <button type="submit" class="btn btn-submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleQuantity(checkbox, quantityFieldId) {
+        const quantityField = document.getElementById(quantityFieldId);
+        if (checkbox.checked) {
+            quantityField.disabled = false;
+            quantityField.value = 1;
+        } else {
+            quantityField.disabled = true;
+            quantityField.value = 0;
         }
-    </script>
-</body>
+    }
+</script>
 {% endblock %}
+
+
+

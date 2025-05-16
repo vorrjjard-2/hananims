@@ -4,20 +4,6 @@
 
 {% block content %}
 <style>
-    .search-container {
-        margin: 20px 0 10px;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .search-container input {
-        padding: 8px 14px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-        width: 240px;
-    }
-
     .table-wrapper {
         background-color: #ffffff;
         border-radius: 15px;
@@ -131,10 +117,6 @@
 <div class="table-wrapper">
     <div class="table-header">View Dishes</div>
 
-    <div class="search-container">
-        <input type="text" id="dishSearch" placeholder="Search dishes...">
-    </div>
-
     <table class="dishes-table" id="dishesTable">
         <thead>
             <tr>
@@ -175,18 +157,6 @@
 <div id="dish-popup" class="popup-box"></div>
 
 <script>
-    // Filter table by dish name
-    document.getElementById('dishSearch').addEventListener('input', function () {
-        const search = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#dishesTable tbody tr');
-
-        rows.forEach(row => {
-            const name = row.querySelector('.dish-name').textContent.toLowerCase();
-            row.style.display = name.includes(search) ? '' : 'none';
-        });
-    });
-
-    // Show popup
     document.querySelectorAll('.see-more-link').forEach(link => {
         link.addEventListener('click', function (e) {
             e.preventDefault();
