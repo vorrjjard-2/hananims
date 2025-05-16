@@ -35,4 +35,5 @@ urlpatterns = [
     path('report', views.report, name="report"),
     path('edit_dish/<int:dish_id>/', views.edit_dish, name='edit_dish'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
+    path('delete-dish/<int:dish_id>/', views.delete_dish, name='delete_dish'),
 ]

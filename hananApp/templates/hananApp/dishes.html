@@ -4,6 +4,20 @@
 
 {% block content %}
 <style>
+    .search-container {
+        margin: 20px 0 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .search-container input {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        width: 240px;
+    }
+
     .table-wrapper {
         background-color: #ffffff;
         border-radius: 15px;
@@ -117,10 +131,15 @@
 <div class="table-wrapper">
     <div class="table-header">View Dishes</div>
 
+    <div class="search-container">
+        <input type="text" id="dishSearch" placeholder="Search dishes...">
+    </div>
+
     <table class="dishes-table" id="dishesTable">
         <thead>
             <tr>
                 <th style="width: 60px;">Edit</th>
+                <th style="width: 60px;">Delete</th>
                 <th style="width: 40px;">ID</th>
                 <th style="width: 200px;">Dish</th>
                 <th style="width: 160px;">Selling Price (PHP)</th>
@@ -131,6 +150,14 @@
             {% for dish in dishes %}
             <tr>
                 <td><a href="{% url 'edit_dish' dish.id %}" class="edit-btn">edit</a></td>
+                <td>
+                    <form action="{% url 'delete_dish' dish.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="border:none; background:none; color:red; cursor:pointer; font-size:14px;" onclick="return confirm('Are you sure you want to delete this dish?');">
+                            delete
+                        </button>
+                    </form>
+                </td>
                 <td>{{ forloop.counter }}</td>
                 <td class="dish-name">{{ dish.name }}</td>
                 <td>{{ dish.price }} PHP</td>
@@ -157,6 +184,18 @@
 <div id="dish-popup" class="popup-box"></div>
 
 <script>
+    // Filter table by dish name
+    document.getElementById('dishSearch').addEventListener('input', function () {
+        const search = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#dishesTable tbody tr');
+
+        rows.forEach(row => {
+            const name = row.querySelector('.dish-name').textContent.toLowerCase();
+            row.style.display = name.includes(search) ? '' : 'none';
+        });
+    });
+
+    // Show popup
     document.querySelectorAll('.see-more-link').forEach(link => {
         link.addEventListener('click', function (e) {
             e.preventDefault();
@@ -196,13 +235,3 @@
     }
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-

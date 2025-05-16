@@ -233,6 +233,16 @@ def add_order(request):
     return render(request, 'hananApp/add_order.html', {'dishes': dishes})
 
 
+def delete_dish(request, dish_id):
+    if request.user.userprofile.role != 'admin':
+        messages.error(request, "You are not authorized to delete dishes.")
+        return redirect('dishes')
+
+    dish = get_object_or_404(Dish, id=dish_id)
+    dish.delete()
+    messages.success(request, "Dish deleted successfully.")
+    return redirect('dishes')
+
 def add_dish(request):
     if request.user.userprofile.role != 'admin':
         return HttpResponse("""
@@ -246,10 +256,16 @@ def add_dish(request):
                 </body>
             </html>
         """)
+    
+
     if request.method == "POST":
         dish_name = request.POST.get("name")
         dish_price = request.POST.get("price")  # Grab the dish price
         ingredient_ids = []
+
+        if Dish.objects.filter(name__iexact=dish_name).exists():
+            messages.error(request, "A dish with this name already exists.")
+            return redirect("add_dish")
 
         # Collect all selected ingredient IDs
         for key, value in request.POST.items():
